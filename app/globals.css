@@ -10,6 +10,35 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Status colors */
+  --color-status-scheduled: #3b82f6;
+  --color-status-confirmed: #6366f1;
+  --color-status-completed: #22c55e;
+  --color-status-cancelled: #6b7280;
+  --color-status-no-show: #ef4444;
+
+  /* Treatment plan statuses */
+  --color-plan-proposed: #f59e0b;
+  --color-plan-accepted: #3b82f6;
+  --color-plan-completed: #22c55e;
+
+  /* Billing statuses */
+  --color-billing-paid: #22c55e;
+  --color-billing-pending: #f59e0b;
+  --color-billing-overdue: #ef4444;
+
+  /* Finding type colors for odontogram */
+  --color-finding-caries: #ef4444;
+  --color-finding-restoration: #3b82f6;
+  --color-finding-crown: #f59e0b;
+  --color-finding-missing: #6b7280;
+  --color-finding-implant: #8b5cf6;
+  --color-finding-endodontic: #ec4899;
+  --color-finding-fracture: #f97316;
+  --color-finding-sealant: #06b6d4;
+  --color-finding-wear: #a855f7;
+  --color-finding-extraction-indicated: #dc2626;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,4 +52,9 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Tooth SVG hover effect */
+.tooth-cell:hover {
+  filter: brightness(0.95);
 }

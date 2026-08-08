@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/app/generated/prisma
+
+# third-party reference material — read-only, never commit
+/reference/
+/odontogram/
+
+# locally stored patient images — demo storage, never commit
+/public/uploads/

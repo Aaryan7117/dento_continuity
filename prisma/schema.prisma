@@ -1,0 +1,358 @@
+// DENTO Continuity — demo schema.
+// Single-tenant by design: there is no Clinic model and no clinicId anywhere.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  DENTIST
+  FRONT_DESK
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+/// Sparse per-tooth findings. A healthy tooth has no rows — "healthy" is the
+/// absence of a finding, never a stored value.
+enum FindingType {
+  CARIES
+  RESTORATION
+  CROWN
+  MISSING
+  IMPLANT
+  ENDODONTIC
+  FRACTURE
+  SEALANT
+  WEAR
+  EXTRACTION_INDICATED
+}
+
+/// Whole-tooth findings (MISSING, CROWN) carry an empty surface array.
+enum ToothSurface {
+  MESIAL
+  DISTAL
+  OCCLUSAL
+  BUCCAL
+  LINGUAL
+}
+
+enum ImageKind {
+  PERIAPICAL
+  BITEWING
+  PANORAMIC
+  INTRAORAL_PHOTO
+  OTHER
+}
+
+enum TreatmentPlanStatus {
+  PROPOSED
+  ACCEPTED
+  COMPLETED
+}
+
+enum BillingStatus {
+  PAID
+  PENDING
+  OVERDUE
+}
+
+enum RecommendationStatus {
+  PENDING
+  APPROVED
+  SENT
+  DISMISSED
+}
+
+enum MessageChannel {
+  SMS
+  WHATSAPP
+  EMAIL
+}
+
+enum MessageDirection {
+  OUTBOUND
+  INBOUND
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  email     String   @unique
+  role      Role
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  appointments    Appointment[]
+  encounters      Encounter[]
+  notes           Note[]
+  toothFindings   ToothFinding[]
+  images          Image[]
+  treatmentPlans  TreatmentPlan[]
+  approvals       Recommendation[]
+  messages        Message[]
+  auditEvents     AuditEvent[]
+
+  @@map("users")
+}
+
+model Patient {
+  id          String    @id @default(uuid()) @db.Uuid
+  firstName   String
+  lastName    String
+  dateOfBirth DateTime  @db.Date
+  phone       String
+  email       String?
+  address     String?
+  // Consent is intake bookkeeping, not a legal workflow.
+  consentGiven Boolean  @default(false)
+  consentAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  appointments    Appointment[]
+  encounters      Encounter[]
+  toothFindings   ToothFinding[]
+  images          Image[]
+  treatmentPlans  TreatmentPlan[]
+  recalls         Recall[]
+  recommendations Recommendation[]
+  messages        Message[]
+
+  @@index([lastName, firstName])
+  @@map("patients")
+}
+
+model Appointment {
+  id         String            @id @default(uuid()) @db.Uuid
+  patientId  String            @db.Uuid
+  providerId String?           @db.Uuid
+  startsAt   DateTime
+  endsAt     DateTime
+  status     AppointmentStatus @default(SCHEDULED)
+  reason     String?
+  // Drives the "revenue recovered" figure on the dashboard.
+  estimatedValue Decimal?      @db.Decimal(10, 2)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  patient  Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  provider User?   @relation(fields: [providerId], references: [id], onDelete: SetNull)
+
+  // Links a replacement booking back to the no-show it recovered.
+  rebookedFromId String?      @unique @db.Uuid
+  rebookedFrom   Appointment? @relation("Rebooking", fields: [rebookedFromId], references: [id], onDelete: SetNull)
+  rebookedTo     Appointment? @relation("Rebooking")
+
+  encounter       Encounter?
+  recommendations Recommendation[]
+
+  @@index([startsAt])
+  @@index([patientId, startsAt])
+  @@index([status])
+  @@map("appointments")
+}
+
+model Encounter {
+  id            String   @id @default(uuid()) @db.Uuid
+  patientId     String   @db.Uuid
+  appointmentId String?  @unique @db.Uuid
+  providerId    String?  @db.Uuid
+  occurredAt    DateTime
+  summary       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  patient       Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointment   Appointment?   @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  provider      User?          @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  notes         Note[]
+  toothFindings ToothFinding[]
+  images        Image[]
+
+  @@index([patientId, occurredAt])
+  @@map("encounters")
+}
+
+model Note {
+  id          String    @id @default(uuid()) @db.Uuid
+  encounterId String    @db.Uuid
+  authorId    String?   @db.Uuid
+  body        String
+  signed      Boolean   @default(false)
+  signedAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  encounter Encounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+  author    User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([encounterId])
+  @@map("notes")
+}
+
+/// Odontogram. One row per observed finding on one tooth.
+model ToothFinding {
+  id          String         @id @default(uuid()) @db.Uuid
+  patientId   String         @db.Uuid
+  encounterId String?        @db.Uuid
+  chartedById String?        @db.Uuid
+  /// FDI notation: 11-48 permanent, 51-85 primary. Quadrant is the first digit.
+  toothCode   Int
+  finding     FindingType
+  surfaces    ToothSurface[]
+  note        String?
+  chartedAt   DateTime       @default(now())
+  resolvedAt  DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  patient   Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  encounter Encounter? @relation(fields: [encounterId], references: [id], onDelete: SetNull)
+  chartedBy User?      @relation(fields: [chartedById], references: [id], onDelete: SetNull)
+
+  @@index([patientId, toothCode])
+  @@index([patientId, resolvedAt])
+  @@map("tooth_findings")
+}
+
+model Image {
+  id           String    @id @default(uuid()) @db.Uuid
+  patientId    String    @db.Uuid
+  encounterId  String?   @db.Uuid
+  uploadedById String?   @db.Uuid
+  kind         ImageKind @default(OTHER)
+  storagePath  String
+  mimeType     String
+  sizeBytes    Int?
+  caption      String?
+  capturedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  patient    Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  encounter  Encounter? @relation(fields: [encounterId], references: [id], onDelete: SetNull)
+  uploadedBy User?      @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([patientId, createdAt])
+  @@map("images")
+}
+
+model TreatmentPlan {
+  id            String              @id @default(uuid()) @db.Uuid
+  patientId     String              @db.Uuid
+  dentistId     String?             @db.Uuid
+  title         String
+  description   String?
+  status        TreatmentPlanStatus @default(PROPOSED)
+  billingStatus BillingStatus       @default(PENDING)
+  estimatedCost Decimal?            @db.Decimal(10, 2)
+  proposedAt    DateTime            @default(now())
+  acceptedAt    DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  patient Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  dentist User?    @relation(fields: [dentistId], references: [id], onDelete: SetNull)
+  recalls Recall[]
+
+  @@index([patientId, status])
+  @@map("treatment_plans")
+}
+
+model Recall {
+  id              String    @id @default(uuid()) @db.Uuid
+  patientId       String    @db.Uuid
+  treatmentPlanId String?   @db.Uuid
+  dueAt           DateTime
+  reason          String?
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  patient       Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  treatmentPlan TreatmentPlan? @relation(fields: [treatmentPlanId], references: [id], onDelete: SetNull)
+
+  @@index([dueAt])
+  @@index([patientId, dueAt])
+  @@map("recalls")
+}
+
+/// Retention Agent output. Never sends on its own — a front_desk user must
+/// approve before status can reach SENT.
+model Recommendation {
+  id            String               @id @default(uuid()) @db.Uuid
+  patientId     String               @db.Uuid
+  appointmentId String?              @db.Uuid
+  approvedById  String?              @db.Uuid
+  status        RecommendationStatus @default(PENDING)
+  /// Why the agent surfaced this patient — shown to the approver.
+  reason        String
+  draftMessage  String
+  channel       MessageChannel       @default(SMS)
+  approvedAt    DateTime?
+  sentAt        DateTime?
+  dismissedAt   DateTime?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  patient     Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  approvedBy  User?        @relation(fields: [approvedById], references: [id], onDelete: SetNull)
+  messages    Message[]
+
+  @@index([status, createdAt])
+  @@index([patientId])
+  @@map("recommendations")
+}
+
+/// Communications log. Sending is mocked — nothing leaves the system.
+model Message {
+  id               String           @id @default(uuid()) @db.Uuid
+  patientId        String           @db.Uuid
+  recommendationId String?          @db.Uuid
+  sentById         String?          @db.Uuid
+  channel          MessageChannel
+  direction        MessageDirection @default(OUTBOUND)
+  body             String
+  sentAt           DateTime         @default(now())
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  patient        Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  recommendation Recommendation? @relation(fields: [recommendationId], references: [id], onDelete: SetNull)
+  sentBy         User?           @relation(fields: [sentById], references: [id], onDelete: SetNull)
+
+  @@index([patientId, sentAt])
+  @@map("messages")
+}
+
+/// Append-only. Rows are inserted, never updated or deleted.
+model AuditEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String?  @db.Uuid
+  actorRole  Role?
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_events")
+}

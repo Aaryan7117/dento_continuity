@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Third-party reference code, not part of this app's build.
+    "odontogram/**",
   ]),
 ]);
 
