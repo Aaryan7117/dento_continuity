@@ -345,6 +345,115 @@ export async function updateAppointmentStatus(
 }
 
 // ---------------------------------------------------------------------------
+// Create Patient
+// ---------------------------------------------------------------------------
+
+const createPatientSchema = z.object({
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  dateOfBirth: z.string(),
+  phone: z.string().min(1),
+  email: z.string().email().optional().or(z.literal("")),
+  address: z.string().optional().or(z.literal("")),
+  consentGiven: z.boolean(),
+});
+
+export async function createPatient(
+  input: z.input<typeof createPatientSchema>
+): Promise<ApiResult<{ patientId: string }>> {
+  const parsed = createPatientSchema.safeParse(input);
+  if (!parsed.success) return invalid();
+
+  const { firstName, lastName, dateOfBirth, phone, email, address, consentGiven } = parsed.data;
+
+  const patient = await prisma.patient.create({
+    data: {
+      firstName,
+      lastName,
+      dateOfBirth: new Date(dateOfBirth),
+      phone,
+      email: email || null,
+      address: address || null,
+      consentGiven,
+      consentAt: consentGiven ? new Date() : null,
+    },
+  });
+
+  revalidatePath("/patients");
+  return { ok: true, data: { patientId: patient.id } };
+}
+
+// ---------------------------------------------------------------------------
+// Create Appointment
+// ---------------------------------------------------------------------------
+
+const createAppointmentSchema = z.object({
+  patientId: z.string().uuid(),
+  providerId: z.string().uuid().optional(),
+  startsAt: z.string(),
+  endsAt: z.string(),
+  reason: z.string().optional(),
+});
+
+export async function createAppointment(
+  input: z.input<typeof createAppointmentSchema>
+): Promise<ApiResult<{ appointmentId: string }>> {
+  const parsed = createAppointmentSchema.safeParse(input);
+  if (!parsed.success) return invalid();
+
+  const { patientId, providerId, startsAt, endsAt, reason } = parsed.data;
+
+  const apt = await prisma.appointment.create({
+    data: {
+      patientId,
+      providerId: providerId || null,
+      startsAt: new Date(startsAt),
+      endsAt: new Date(endsAt),
+      reason,
+      status: "SCHEDULED",
+    },
+  });
+
+  revalidatePath("/front-desk");
+  revalidatePath("/dashboard");
+  revalidatePath("/calendar");
+  revalidatePath(`/patients/${patientId}`);
+  
+  return { ok: true, data: { appointmentId: apt.id } };
+}
+
+// ---------------------------------------------------------------------------
+// Change Appointment Status
+// ---------------------------------------------------------------------------
+
+const changeAppointmentStatusSchema = z.object({
+  id: z.string().uuid(),
+  status: z.enum(["SCHEDULED", "CONFIRMED", "COMPLETED", "CANCELLED", "NO_SHOW"]),
+});
+
+export async function changeAppointmentStatus(
+  input: z.input<typeof changeAppointmentStatusSchema>
+): Promise<ApiResult<{ appointmentId: string }>> {
+  const parsed = changeAppointmentStatusSchema.safeParse(input);
+  if (!parsed.success) return invalid();
+
+  const { id, status } = parsed.data;
+
+  if (status === "NO_SHOW") {
+    await markNoShow(id);
+  } else if (status === "CANCELLED") {
+    await cancelAppointment(id);
+  } else {
+    await updateAppointment(id, { status });
+  }
+
+  revalidatePath("/front-desk");
+  revalidatePath("/dashboard");
+  revalidatePath("/calendar");
+  return { ok: true, data: { appointmentId: id } };
+}
+
+// ---------------------------------------------------------------------------
 
 /** Notes hang off an encounter, so the page to refresh is the patient's. */
 async function revalidatePatientOfEncounter(encounterId: string) {

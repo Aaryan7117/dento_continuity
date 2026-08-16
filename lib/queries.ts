@@ -374,3 +374,193 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
     outstandingBalanceCount,
   };
 }
+
+// ---------------------------------------------------------------------------
+// All Patients (Directory)
+// ---------------------------------------------------------------------------
+
+export async function getPatients(): Promise<import("./contract").Patient[]> {
+  const rows = await prisma.patient.findMany({
+    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+  });
+  
+  return rows.map((p) => ({
+    id: p.id,
+    firstName: p.firstName,
+    lastName: p.lastName,
+    dateOfBirth: p.dateOfBirth.toISOString().slice(0, 10),
+    phone: p.phone,
+    email: p.email,
+    address: p.address,
+    consentGiven: p.consentGiven,
+    consentAt: p.consentAt?.toISOString() ?? null,
+    createdAt: p.createdAt.toISOString(),
+    updatedAt: p.updatedAt.toISOString(),
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// Calendar Appointments
+// ---------------------------------------------------------------------------
+
+export async function getCalendarAppointments(from: Date, to: Date): Promise<import("./contract").AppointmentWithPatient[]> {
+  const rows = await prisma.appointment.findMany({
+    where: {
+      startsAt: { gte: from, lt: to },
+    },
+    include: {
+      patient: true,
+      provider: true,
+      recommendations: { where: { status: "PENDING" }, select: { id: true } },
+    },
+    orderBy: { startsAt: "asc" },
+  });
+
+  return rows.map((a) => ({
+    id: a.id,
+    patientId: a.patientId,
+    providerId: a.providerId,
+    startsAt: a.startsAt.toISOString(),
+    endsAt: a.endsAt.toISOString(),
+    status: a.status,
+    reason: a.reason,
+    estimatedValue: a.estimatedValue ? Number(a.estimatedValue) : null,
+    rebookedFromId: a.rebookedFromId,
+    createdAt: a.createdAt.toISOString(),
+    updatedAt: a.updatedAt.toISOString(),
+    patient: {
+      id: a.patient.id,
+      firstName: a.patient.firstName,
+      lastName: a.patient.lastName,
+      phone: a.patient.phone,
+      dateOfBirth: a.patient.dateOfBirth.toISOString().slice(0, 10),
+    },
+    provider: a.provider
+      ? { id: a.provider.id, name: a.provider.name, role: a.provider.role }
+      : null,
+    pendingRecommendationId:
+      a.recommendations.length > 0 ? a.recommendations[0].id : null,
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// Providers (for appointment booking)
+// ---------------------------------------------------------------------------
+
+export async function getProviders(): Promise<
+  { id: string; name: string; role: string }[]
+> {
+  return prisma.user.findMany({
+    where: { role: "DENTIST" },
+    select: { id: true, name: true, role: true },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Recalls Due (for patient directory tab)
+// ---------------------------------------------------------------------------
+
+export type RecallWithPatient = {
+  id: string;
+  patientId: string;
+  reason: string | null;
+  dueAt: string;
+  completedAt: string | null;
+  patient: { id: string; firstName: string; lastName: string; phone: string };
+};
+
+export async function getRecallsDue(): Promise<RecallWithPatient[]> {
+  const thirtyDaysFromNow = new Date();
+  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+  const rows = await prisma.recall.findMany({
+    where: { completedAt: null, dueAt: { lte: thirtyDaysFromNow } },
+    include: {
+      patient: { select: { id: true, firstName: true, lastName: true, phone: true } },
+    },
+    orderBy: { dueAt: "asc" },
+  });
+
+  return rows.map((r) => ({
+    id: r.id,
+    patientId: r.patientId,
+    reason: r.reason,
+    dueAt: r.dueAt.toISOString(),
+    completedAt: r.completedAt?.toISOString() ?? null,
+    patient: r.patient,
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// Outstanding Balances (for patient directory tab)
+// ---------------------------------------------------------------------------
+
+export type BalanceWithPatient = {
+  id: string;
+  patientId: string;
+  title: string;
+  billingStatus: string;
+  estimatedCost: number | null;
+  patient: { id: string; firstName: string; lastName: string; phone: string };
+};
+
+export async function getOutstandingBalances(): Promise<BalanceWithPatient[]> {
+  const rows = await prisma.treatmentPlan.findMany({
+    where: { billingStatus: { in: ["PENDING", "OVERDUE"] } },
+    include: {
+      patient: { select: { id: true, firstName: true, lastName: true, phone: true } },
+    },
+    orderBy: { proposedAt: "desc" },
+  });
+
+  return rows.map((tp) => ({
+    id: tp.id,
+    patientId: tp.patientId,
+    title: tp.title,
+    billingStatus: tp.billingStatus,
+    estimatedCost: tp.estimatedCost ? Number(tp.estimatedCost) : null,
+    patient: tp.patient,
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// Chair Utilization (heatmap data)
+// ---------------------------------------------------------------------------
+
+export type ChairSlot = {
+  dayOfWeek: number; // 0=Sun, 6=Sat
+  hour: number;      // 8-17
+  count: number;
+};
+
+export async function getChairUtilization(weekStart: Date): Promise<ChairSlot[]> {
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 7);
+
+  const appointments = await prisma.appointment.findMany({
+    where: {
+      startsAt: { gte: weekStart, lt: weekEnd },
+      status: { notIn: ["CANCELLED"] },
+    },
+    select: { startsAt: true },
+  });
+
+  // Build a map of day-of-week + hour → count
+  const slotMap = new Map<string, number>();
+  for (const apt of appointments) {
+    const d = new Date(apt.startsAt);
+    const key = `${d.getDay()}-${d.getHours()}`;
+    slotMap.set(key, (slotMap.get(key) || 0) + 1);
+  }
+
+  const slots: ChairSlot[] = [];
+  for (let day = 0; day < 7; day++) {
+    for (let hour = 8; hour <= 17; hour++) {
+      const key = `${day}-${hour}`;
+      slots.push({ dayOfWeek: day, hour, count: slotMap.get(key) || 0 });
+    }
+  }
+
+  return slots;
+}
+

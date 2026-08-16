@@ -1,121 +1,100 @@
 import { getTodaySchedule, getPendingRecommendations } from "@/lib/queries";
-import StatusBadge from "@/app/components/StatusBadge";
 import ApproveRecommendationCard from "@/app/components/ApproveRecommendationCard";
-import Link from "next/link";
+import { AlertCircle, Sparkles } from "lucide-react";
+import FrontDeskScheduleClient from "./FrontDeskScheduleClient";
 
-export default async function FrontDeskPage() {
+export const dynamic = "force-dynamic";
+
+export default async function FrontDeskPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ filter?: string }>;
+}) {
+  const { filter } = await searchParams;
   const [schedule, recommendations] = await Promise.all([
     getTodaySchedule(),
     getPendingRecommendations(),
   ]);
 
+  // Apply filter from dashboard links
+  const filteredSchedule = filter
+    ? filter === "recovered"
+      ? schedule.filter((a) => a.rebookedFromId != null)
+      : schedule.filter((a) => a.status === filter)
+    : schedule;
+
+  const filterLabel =
+    filter === "NO_SHOW"
+      ? "No-Shows"
+      : filter === "recovered"
+        ? "Recovered Bookings"
+        : null;
+
   return (
-    <div className="flex gap-6 items-start">
-      {/* Left: Today's Schedule */}
-      <div className="flex-1 min-w-0">
-        <h1 className="text-xl font-semibold text-gray-900 mb-4">
-          Today&apos;s Schedule
-        </h1>
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-2.5 font-medium text-gray-600">
-                  Time
-                </th>
-                <th className="text-left px-4 py-2.5 font-medium text-gray-600">
-                  Patient
-                </th>
-                <th className="text-left px-4 py-2.5 font-medium text-gray-600">
-                  Reason
-                </th>
-                <th className="text-left px-4 py-2.5 font-medium text-gray-600">
-                  Provider
-                </th>
-                <th className="text-left px-4 py-2.5 font-medium text-gray-600">
-                  Status
-                </th>
-                <th className="text-left px-4 py-2.5 font-medium text-gray-600">
-                  Value
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {schedule.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
-                    No appointments today
-                  </td>
-                </tr>
-              )}
-              {schedule.map((apt) => (
-                <tr
-                  key={apt.id}
-                  className={`hover:bg-gray-50 transition-colors ${
-                    apt.status === "NO_SHOW" ? "bg-red-50/50" : ""
-                  }`}
-                >
-                  <td className="px-4 py-3 text-gray-900 whitespace-nowrap">
-                    {new Date(apt.startsAt).toLocaleTimeString(undefined, {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/patients/${apt.patientId}`}
-                      className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
-                    >
-                      {apt.patient.firstName} {apt.patient.lastName}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">
-                    {apt.reason ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">
-                    {apt.provider?.name ?? "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={apt.status} />
-                    {apt.pendingRecommendationId && (
-                      <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700">
-                        ⚡ Agent
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">
-                    {apt.estimatedValue != null
-                      ? `₦${apt.estimatedValue.toLocaleString()}`
-                      : "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+    <div className="flex flex-col xl:flex-row gap-8 items-start">
+      {/* Interactive Schedule & Smart Waitlist */}
+      <div className="flex-1 min-w-0 w-full">
+        <FrontDeskScheduleClient
+          schedule={filteredSchedule}
+          filter={filter}
+          filterLabel={filterLabel}
+        />
       </div>
 
-      {/* Right: Continuity Panel */}
-      <div className="w-96 shrink-0">
-        <div className="flex items-center gap-2 mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Continuity</h2>
+      {/* Continuity panel */}
+      <div id="continuity" className="w-full xl:w-[380px] shrink-0">
+        <div className="flex items-center gap-2.5 mb-5">
+          <h2 className="text-xl font-bold" style={{ color: "var(--foreground)" }}>
+            Continuity
+          </h2>
           {recommendations.length > 0 && (
-            <span className="bg-red-100 text-red-700 text-xs font-medium px-2 py-0.5 rounded-full">
+            <span
+              className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
+              style={{ background: "#ef4444" }}
+            >
               {recommendations.length}
             </span>
           )}
         </div>
 
         {recommendations.length === 0 ? (
-          <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
-            <p className="text-gray-400 text-sm">
-              No pending recommendations
+          <div className="card p-8 text-center">
+            <div
+              className="w-11 h-11 rounded-full flex items-center justify-center mx-auto mb-3"
+              style={{ background: "rgba(16, 185, 129, 0.1)" }}
+            >
+              <Sparkles className="w-5 h-5" style={{ color: "#10b981" }} />
+            </div>
+            <h3 className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>
+              All caught up
+            </h3>
+            <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>
+              No pending recommendations right now.
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
+            <div
+              className="rounded-xl p-4 flex items-start gap-3"
+              style={{
+                background: "rgba(245, 158, 11, 0.06)",
+                border: "1px solid rgba(245, 158, 11, 0.15)",
+              }}
+            >
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "#d97706" }} />
+              <div>
+                <h4 className="text-sm font-semibold" style={{ color: "#92400e" }}>
+                  Action Required
+                </h4>
+                <p className="text-xs mt-1 leading-relaxed" style={{ color: "#b45309" }}>
+                  Review and approve draft messages for recent no-shows.
+                </p>
+              </div>
+            </div>
             {recommendations.map((rec) => (
-              <ApproveRecommendationCard key={rec.id} rec={rec} />
+              <div key={rec.id} className="stagger-item">
+                <ApproveRecommendationCard rec={rec} />
+              </div>
             ))}
           </div>
         )}

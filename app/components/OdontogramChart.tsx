@@ -276,6 +276,24 @@ function ToothOcclusal({
   );
 }
 
+const TOOTH_NAMES: Record<number, string> = {
+  18: "Upper Right 3rd Molar", 17: "Upper Right 2nd Molar", 16: "Upper Right 1st Molar",
+  15: "Upper Right 2nd Premolar", 14: "Upper Right 1st Premolar", 13: "Upper Right Canine",
+  12: "Upper Right Lateral Incisor", 11: "Upper Right Central Incisor",
+  21: "Upper Left Central Incisor", 22: "Upper Left Lateral Incisor", 23: "Upper Left Canine",
+  24: "Upper Left 1st Premolar", 25: "Upper Left 2nd Premolar", 26: "Upper Left 1st Molar",
+  27: "Upper Left 2nd Molar", 28: "Upper Left 3rd Molar",
+  48: "Lower Right 3rd Molar", 47: "Lower Right 2nd Molar", 46: "Lower Right 1st Molar",
+  45: "Lower Right 2nd Premolar", 44: "Lower Right 1st Premolar", 43: "Lower Right Canine",
+  42: "Lower Right Lateral Incisor", 41: "Lower Right Central Incisor",
+  31: "Lower Left Central Incisor", 32: "Lower Left Lateral Incisor", 33: "Lower Left Canine",
+  34: "Lower Left 1st Premolar", 35: "Lower Left 2nd Premolar", 36: "Lower Left 1st Molar",
+  37: "Lower Left 2nd Molar", 38: "Lower Left 3rd Molar",
+};
+
+import { useState } from "react";
+import { X, CheckCircle2, AlertCircle } from "lucide-react";
+
 export default function OdontogramChart({
   findings,
   onToothClick,
@@ -283,6 +301,8 @@ export default function OdontogramChart({
   findings: ToothFinding[];
   onToothClick?: (toothCode: number) => void;
 }) {
+  const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
+
   // Group findings by tooth code
   const findingsByTooth = new Map<number, ToothFinding[]>();
   for (const f of findings) {
@@ -293,8 +313,18 @@ export default function OdontogramChart({
     }
   }
 
+  function handleToothClick(code: number) {
+    if (onToothClick) {
+      onToothClick(code);
+    } else {
+      setSelectedTooth(code);
+    }
+  }
+
+  const selectedFindings = selectedTooth ? findingsByTooth.get(selectedTooth) ?? [] : [];
+
   return (
-    <div className="space-y-1">
+    <div className="space-y-2 relative">
       {/* Legend */}
       <div className="flex flex-wrap gap-3 mb-3">
         {Object.entries(FINDING_LABELS).map(([key, label]) => (
@@ -307,7 +337,7 @@ export default function OdontogramChart({
 
       {/* Upper arch - lateral view */}
       <div className="bg-white border border-gray-200 rounded-lg p-3">
-        <div className="text-[10px] text-gray-400 mb-1 text-center">Upper Arch</div>
+        <div className="text-[10px] text-gray-400 mb-1 text-center font-medium">Upper Arch (Maxillary)</div>
         <div className="flex justify-center items-end gap-0.5">
           {UPPER_ROW.map((code) => (
             <ToothSVG
@@ -315,14 +345,14 @@ export default function OdontogramChart({
               toothCode={code}
               findings={findingsByTooth.get(code) ?? []}
               isUpper={true}
-              onClick={() => onToothClick?.(code)}
+              onClick={() => handleToothClick(code)}
             />
           ))}
         </div>
         {/* Occlusal view row */}
         <div className="flex justify-center gap-0.5 mt-1 border-t border-gray-100 pt-1">
           {UPPER_ROW.map((code) => (
-            <div key={code} className="w-6 flex justify-center">
+            <div key={code} className="w-6 flex justify-center cursor-pointer" onClick={() => handleToothClick(code)}>
               <ToothOcclusal
                 toothCode={code}
                 findings={findingsByTooth.get(code) ?? []}
@@ -337,7 +367,7 @@ export default function OdontogramChart({
         {/* Occlusal view row */}
         <div className="flex justify-center gap-0.5 mb-1 border-b border-gray-100 pb-1">
           {LOWER_ROW.map((code) => (
-            <div key={code} className="w-6 flex justify-center">
+            <div key={code} className="w-6 flex justify-center cursor-pointer" onClick={() => handleToothClick(code)}>
               <ToothOcclusal
                 toothCode={code}
                 findings={findingsByTooth.get(code) ?? []}
@@ -352,12 +382,90 @@ export default function OdontogramChart({
               toothCode={code}
               findings={findingsByTooth.get(code) ?? []}
               isUpper={false}
-              onClick={() => onToothClick?.(code)}
+              onClick={() => handleToothClick(code)}
             />
           ))}
         </div>
-        <div className="text-[10px] text-gray-400 mt-1 text-center">Lower Arch</div>
+        <div className="text-[10px] text-gray-400 mt-1 text-center font-medium">Lower Arch (Mandibular)</div>
       </div>
+
+      {/* Selected Tooth Inspector Modal */}
+      {selectedTooth && (
+        <div className="fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-stone-200 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                  FDI Notation #{selectedTooth}
+                </span>
+                <h3 className="font-bold text-sm text-stone-900">
+                  {TOOTH_NAMES[selectedTooth] || `Tooth #${selectedTooth}`}
+                </h3>
+              </div>
+              <button
+                onClick={() => setSelectedTooth(null)}
+                className="p-1 text-stone-400 hover:text-stone-700 rounded-lg"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {selectedFindings.length === 0 ? (
+              <div className="py-4 text-center space-y-1">
+                <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto opacity-80" />
+                <p className="text-sm font-semibold text-stone-800">Healthy Tooth</p>
+                <p className="text-xs text-stone-400">No active findings or restorations recorded.</p>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                <div className="text-xs font-semibold text-stone-700 flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                  Recorded Findings ({selectedFindings.length})
+                </div>
+                {selectedFindings.map((f) => (
+                  <div
+                    key={f.id}
+                    className="p-3 rounded-xl border border-stone-200/80 bg-stone-50 space-y-1"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span
+                        className="text-xs font-bold px-2 py-0.5 rounded"
+                        style={{
+                          backgroundColor: `${FINDING_COLORS[f.finding]}20`,
+                          color: FINDING_COLORS[f.finding],
+                        }}
+                      >
+                        {FINDING_LABELS[f.finding] || f.finding}
+                      </span>
+                      {f.surfaces && f.surfaces.length > 0 && (
+                        <span className="text-[10px] text-stone-500 font-mono font-medium">
+                          {f.surfaces.join(", ")}
+                        </span>
+                      )}
+                    </div>
+                    {f.note && (
+                      <p className="text-xs text-stone-600 mt-1">{f.note}</p>
+                    )}
+                    <span className="text-[10px] text-stone-400 block mt-1">
+                      Charted: {new Date(f.chartedAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={() => setSelectedTooth(null)}
+                className="w-full py-2 text-xs font-semibold rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

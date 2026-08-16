@@ -128,6 +128,7 @@ model Patient {
   recalls         Recall[]
   recommendations Recommendation[]
   messages        Message[]
+  waitlistEntries WaitlistEntry[]
 
   @@index([lastName, firstName])
   @@map("patients")
@@ -355,4 +356,25 @@ model AuditEvent {
   @@index([entityType, entityId])
   @@index([createdAt])
   @@map("audit_events")
+}
+
+/// Smart Waitlist. Patients who want earlier slots or have pending work.
+model WaitlistEntry {
+  id             String    @id @default(uuid()) @db.Uuid
+  patientId      String    @db.Uuid
+  preferredDays  String?   /// e.g. "Monday,Wednesday"
+  preferredTime  String?   /// "morning" | "afternoon" | "any"
+  procedureType  String?   /// e.g. "Crown fitting", "Cleaning"
+  estimatedMins  Int?      /// approximate procedure duration
+  note           String?
+  addedAt        DateTime  @default(now())
+  filledAt       DateTime? /// when the patient got a slot
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([filledAt])
+  @@index([patientId])
+  @@map("waitlist_entries")
 }

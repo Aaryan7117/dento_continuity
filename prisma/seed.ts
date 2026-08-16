@@ -47,6 +47,7 @@ async function reset() {
   await prisma.toothFinding.deleteMany();
   await prisma.note.deleteMany();
   await prisma.encounter.deleteMany();
+  await prisma.waitlistEntry.deleteMany();
   await prisma.appointment.deleteMany();
   await prisma.patient.deleteMany();
   await prisma.user.deleteMany();
@@ -483,6 +484,59 @@ async function main() {
     ],
   });
 
+  // ---------------------------------------------------------------------------
+  // Smart Waitlist entries
+  // ---------------------------------------------------------------------------
+  await prisma.waitlistEntry.createMany({
+    data: [
+      {
+        patientId: patients[0].id, // Amara Okonkwo
+        preferredDays: "Monday,Wednesday,Friday",
+        preferredTime: "morning",
+        procedureType: "Scale and polish",
+        estimatedMins: 30,
+        note: "Available on short notice for morning slots",
+        addedAt: at(-4, 9),
+      },
+      {
+        patientId: patients[2].id, // Chiamaka Eze
+        preferredDays: "Tuesday,Thursday",
+        preferredTime: "morning",
+        procedureType: "Crown fitting",
+        estimatedMins: 45,
+        note: "Needs earlier slot if possible before traveling next week",
+        addedAt: at(-6, 14),
+      },
+      {
+        patientId: patients[4].id, // Zainab Bello
+        preferredDays: "any",
+        preferredTime: "any",
+        procedureType: "Filling — lower left",
+        estimatedMins: 40,
+        note: "Flexible, can arrive in 20 mins",
+        addedAt: at(-2, 11),
+      },
+      {
+        patientId: patients[6].id, // Folake Adebayo
+        preferredDays: "Monday,Tuesday,Thursday",
+        preferredTime: "afternoon",
+        procedureType: "Consultation",
+        estimatedMins: 30,
+        note: "Prefers afternoons after 2pm",
+        addedAt: at(-8, 16),
+      },
+      {
+        patientId: patients[8].id, // Ngozi Okafor
+        preferredDays: "Friday,Saturday",
+        preferredTime: "morning",
+        procedureType: "Routine examination",
+        estimatedMins: 20,
+        note: "Weekend or Friday morning preferred",
+        addedAt: at(-1, 10),
+      },
+    ],
+  });
+
   const counts = {
     users: await prisma.user.count(),
     patients: await prisma.patient.count(),
@@ -494,6 +548,7 @@ async function main() {
     treatmentPlans: await prisma.treatmentPlan.count(),
     recalls: await prisma.recall.count(),
     recommendations: await prisma.recommendation.count(),
+    waitlistEntries: await prisma.waitlistEntry.count(),
     messages: await prisma.message.count(),
     auditEvents: await prisma.auditEvent.count(),
   };

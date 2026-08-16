@@ -1,4 +1,19 @@
 import { getDashboardSummary } from "@/lib/queries";
+import Link from "next/link";
+import {
+  CalendarCheck,
+  UserMinus,
+  Activity,
+  TrendingUp,
+  AlertCircle,
+  RefreshCcw,
+  Wallet,
+  ArrowRight,
+} from "lucide-react";
+import AnimatedNumber from "@/app/components/AnimatedNumber";
+import ChairHeatmap from "@/app/components/ChairHeatmap";
+
+export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const stats = await getDashboardSummary();
@@ -7,78 +22,142 @@ export default async function DashboardPage() {
     {
       label: "Today's Appointments",
       value: stats.todayAppointmentCount,
-      color: "bg-blue-50 text-blue-700 border-blue-200",
+      icon: CalendarCheck,
+      accent: "#0ea5e9",
+      accentBg: "rgba(14, 165, 233, 0.08)",
+      href: "/front-desk",
     },
     {
       label: "No-Shows Today",
       value: stats.todayNoShowCount,
-      color: stats.todayNoShowCount > 0
-        ? "bg-red-50 text-red-700 border-red-200"
-        : "bg-gray-50 text-gray-700 border-gray-200",
+      icon: UserMinus,
+      accent: stats.todayNoShowCount > 0 ? "#ef4444" : "#a8a29e",
+      accentBg: stats.todayNoShowCount > 0 ? "rgba(239, 68, 68, 0.08)" : "rgba(168, 162, 158, 0.08)",
+      href: "/front-desk?filter=NO_SHOW",
     },
     {
-      label: "Pending Recommendations",
+      label: "Pending Agent Tasks",
       value: stats.pendingRecommendationCount,
-      color: stats.pendingRecommendationCount > 0
-        ? "bg-amber-50 text-amber-700 border-amber-200"
-        : "bg-gray-50 text-gray-700 border-gray-200",
+      icon: Activity,
+      accent: stats.pendingRecommendationCount > 0 ? "#f59e0b" : "#a8a29e",
+      accentBg: stats.pendingRecommendationCount > 0 ? "rgba(245, 158, 11, 0.08)" : "rgba(168, 162, 158, 0.08)",
+      href: "/front-desk#continuity",
     },
     {
-      label: "Recovered Appointments",
-      value: stats.recoveredAppointmentCount,
-      color: "bg-green-50 text-green-700 border-green-200",
-    },
-    {
-      label: "Revenue Recovered",
-      value: `₦${stats.revenueRecovered.toLocaleString()}`,
-      color: "bg-green-50 text-green-700 border-green-200",
-    },
-    {
-      label: "Recalls Due (30 days)",
+      label: "Recalls Due",
       value: stats.recallsDueCount,
-      color: stats.recallsDueCount > 0
-        ? "bg-amber-50 text-amber-700 border-amber-200"
-        : "bg-gray-50 text-gray-700 border-gray-200",
+      icon: RefreshCcw,
+      accent: stats.recallsDueCount > 0 ? "#f59e0b" : "#a8a29e",
+      accentBg: stats.recallsDueCount > 0 ? "rgba(245, 158, 11, 0.08)" : "rgba(168, 162, 158, 0.08)",
+      href: "/patients?tab=recalls",
     },
     {
       label: "Outstanding Balances",
       value: stats.outstandingBalanceCount,
-      color: stats.outstandingBalanceCount > 0
-        ? "bg-red-50 text-red-700 border-red-200"
-        : "bg-gray-50 text-gray-700 border-gray-200",
+      icon: AlertCircle,
+      accent: stats.outstandingBalanceCount > 0 ? "#ef4444" : "#a8a29e",
+      accentBg: stats.outstandingBalanceCount > 0 ? "rgba(239, 68, 68, 0.08)" : "rgba(168, 162, 158, 0.08)",
+      href: "/patients?tab=balances",
+    },
+    {
+      label: "Recovered Revenue",
+      value: stats.revenueRecovered,
+      icon: Wallet,
+      accent: "#10b981",
+      accentBg: "rgba(16, 185, 129, 0.08)",
+      isCurrency: true,
+      href: "/front-desk?filter=recovered",
     },
   ];
 
   return (
-    <div>
-      <h1 className="text-xl font-semibold text-gray-900 mb-6">
-        Practice Dashboard
-      </h1>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>
+          Practice Overview
+        </h1>
+        <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
+          Here&apos;s what&apos;s happening at your clinic today.
+        </p>
+      </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {cards.map((card) => (
-          <div
+          <Link
             key={card.label}
-            className={`border rounded-lg p-5 ${card.color}`}
+            href={card.href}
+            className="card p-5 stagger-item group relative overflow-hidden"
+            style={{
+              transition: "transform 180ms var(--ease-out), box-shadow 180ms var(--ease-out)",
+            }}
+            onMouseEnter={undefined}
           >
-            <p className="text-sm font-medium opacity-80">{card.label}</p>
-            <p className="text-3xl font-bold mt-1">{card.value}</p>
-          </div>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[13px] font-medium" style={{ color: "var(--text-secondary)" }}>
+                  {card.label}
+                </p>
+                <div className="text-[28px] font-bold mt-1.5" style={{ color: "var(--foreground)" }}>
+                  {card.isCurrency ? (
+                    <AnimatedNumber value={card.value} prefix="₦" />
+                  ) : (
+                    <AnimatedNumber value={card.value} />
+                  )}
+                </div>
+              </div>
+              <div
+                className="p-2.5 rounded-xl"
+                style={{ background: card.accentBg }}
+              >
+                <card.icon className="w-5 h-5" style={{ color: card.accent }} />
+              </div>
+            </div>
+            {/* Hover arrow indicator */}
+            <div
+              className="absolute bottom-4 right-4 flex items-center gap-1 text-xs font-semibold opacity-0 translate-x-1 group-hover:opacity-60 group-hover:translate-x-0"
+              style={{
+                color: card.accent,
+                transition: "opacity 200ms var(--ease-out), transform 200ms var(--ease-out)",
+              }}
+            >
+              View <ArrowRight className="w-3.5 h-3.5" />
+            </div>
+          </Link>
         ))}
       </div>
 
-      {/* Revenue highlight */}
+      {/* Chair Utilization Heatmap */}
+      <ChairHeatmap />
+
+      {/* Retention Agent impact banner */}
       {stats.recoveredAppointmentCount > 0 && (
-        <div className="mt-8 bg-green-50 border border-green-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-green-800">
-            Retention Agent Impact
-          </h2>
-          <p className="text-sm text-green-700 mt-1">
-            The Retention Agent has recovered{" "}
-            <strong>{stats.recoveredAppointmentCount} appointments</strong>{" "}
-            worth <strong>₦{stats.revenueRecovered.toLocaleString()}</strong> in
-            estimated revenue that would otherwise have been lost to no-shows.
-          </p>
+        <div
+          className="rounded-2xl p-7 relative overflow-hidden stagger-item"
+          style={{
+            background: "linear-gradient(135deg, #019d8e 0%, #0d524d 100%)",
+          }}
+        >
+          {/* Decorative icon — subtle, not noisy */}
+          <div className="absolute top-0 right-0 -mt-6 -mr-6 opacity-[0.06]">
+            <TrendingUp className="w-48 h-48 text-white" />
+          </div>
+          <div className="relative z-10">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <Activity className="w-5 h-5" />
+              Retention Agent Impact
+            </h2>
+            <p className="text-teal-100 mt-2 max-w-2xl leading-relaxed">
+              Successfully recovered{" "}
+              <strong className="text-white">
+                {stats.recoveredAppointmentCount} appointment{stats.recoveredAppointmentCount !== 1 ? "s" : ""}
+              </strong>{" "}
+              worth{" "}
+              <strong className="text-white">
+                ₦{stats.revenueRecovered.toLocaleString()}
+              </strong>{" "}
+              in estimated revenue from no-shows.
+            </p>
+          </div>
         </div>
       )}
     </div>

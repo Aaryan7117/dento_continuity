@@ -5,6 +5,8 @@ import AddNoteForm, { SignNoteButton } from "@/app/components/AddNoteForm";
 import AddToothFindingForm from "@/app/components/AddToothFindingForm";
 import StatusBadge from "@/app/components/StatusBadge";
 
+export const dynamic = "force-dynamic";
+
 export default async function EncounterDetailPage({
   params,
 }: {
