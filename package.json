@@ -29,6 +29,7 @@
       "public/**/*",
       "app/generated/**/*",
       "package.json",
+      ".env",
       "lib/**/*",
       "node_modules/**/*"
     ],

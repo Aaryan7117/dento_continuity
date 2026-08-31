@@ -1,6 +1,23 @@
-const { app, BrowserWindow, shell, ipcMain, Menu } = require("electron");
+const { app, BrowserWindow, shell, ipcMain } = require("electron");
 const path = require("path");
 const http = require("http");
+const fs = require("fs");
+const { parse } = require("url");
+const dotenv = require("dotenv");
+
+// Load environment variables from .env
+const appDir = path.join(__dirname, "..");
+const envPaths = [
+  path.join(appDir, ".env"),
+  path.join(process.resourcesPath, ".env"),
+  path.join(process.resourcesPath, "app", ".env"),
+];
+
+for (const p of envPaths) {
+  if (fs.existsSync(p)) {
+    dotenv.config({ path: p });
+  }
+}
 
 const isDev = process.env.NODE_ENV === "development" || !app.isPackaged;
 let mainWindow = null;
@@ -15,18 +32,24 @@ async function startServer() {
   const next = require("next");
   const nextApp = next({
     dev: false,
-    dir: path.join(__dirname, ".."),
+    dir: appDir,
   });
   const handle = nextApp.getRequestHandler();
 
   await nextApp.prepare();
 
   return new Promise((resolve, reject) => {
-    const server = http.createServer((req, res) => {
-      handle(req, res);
+    const server = http.createServer(async (req, res) => {
+      try {
+        const parsedUrl = parse(req.url, true);
+        await handle(req, res, parsedUrl);
+      } catch (err) {
+        console.error("Error handling request:", req.url, err);
+        res.statusCode = 500;
+        res.end("Internal server error");
+      }
     });
 
-    // Listen on port 0 to get an available system port
     server.listen(0, "127.0.0.1", () => {
       const port = server.address().port;
       serverInstance = server;
@@ -45,7 +68,7 @@ async function createWindow() {
   try {
     port = await startServer();
   } catch (err) {
-    console.error("Failed to start server:", err);
+    console.error("Failed to start internal server:", err);
   }
 
   mainWindow = new BrowserWindow({
