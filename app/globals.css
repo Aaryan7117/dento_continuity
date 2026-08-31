@@ -665,19 +665,6 @@ body:has([data-theme="editorial"]) {
   font-family: var(--font-outfit), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
-  --jade: #39c6b3;
-  --oxblood: #b4545d;
-
-  --teal: #1f9a8d;
-  --teal-light: #39c6b3;
-  --teal-wash: rgba(57, 198, 179, 0.11);
-  --grain-opacity: 0.035;
-  --vignette: radial-gradient(
-    ellipse 90% 70% at 50% 40%,
-    transparent 40%,
-    rgba(0, 0, 0, 0.55) 100%
-  );
-}
 
 /* ── Editorial type ── */
 [data-theme="editorial"] .display {
