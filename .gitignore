@@ -51,3 +51,7 @@ next-env.d.ts
 
 # IDE and agent local settings
 .claude/
+
+# Electron desktop builds
+/dist-desktop/
+/dist/

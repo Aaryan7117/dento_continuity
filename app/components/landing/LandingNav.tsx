@@ -151,7 +151,7 @@ export default function LandingNav() {
               href="/front-desk"
               className="btn-gold hidden h-9 items-center rounded-[8px] px-5 text-[12.5px] sm:inline-flex"
             >
-              Open the demo
+              Launch Studio
             </Link>
             <button
               type="button"
