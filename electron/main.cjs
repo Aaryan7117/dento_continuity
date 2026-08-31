@@ -5,8 +5,22 @@ const fs = require("fs");
 const { parse } = require("url");
 const dotenv = require("dotenv");
 
+const isDev = process.env.NODE_ENV === "development" || !app.isPackaged;
+const appDir = isDev ? path.join(__dirname, "..") : app.getAppPath();
+
+// Setup log file for debugging
+const logFile = path.join(app.getPath("userData"), "dento-desktop.log");
+function log(msg, ...args) {
+  const line = `[${new Date().toISOString()}] ${msg} ${args.map(a => typeof a === "object" ? JSON.stringify(a) : a).join(" ")}\n`;
+  try {
+    fs.appendFileSync(logFile, line);
+  } catch (_) {}
+  console.log(msg, ...args);
+}
+
+log("Starting DENTO Continuity Desktop... AppDir:", appDir);
+
 // Load environment variables from .env
-const appDir = path.join(__dirname, "..");
 const envPaths = [
   path.join(appDir, ".env"),
   path.join(process.resourcesPath, ".env"),
@@ -15,11 +29,11 @@ const envPaths = [
 
 for (const p of envPaths) {
   if (fs.existsSync(p)) {
+    log("Loading .env from:", p);
     dotenv.config({ path: p });
   }
 }
 
-const isDev = process.env.NODE_ENV === "development" || !app.isPackaged;
 let mainWindow = null;
 let serverInstance = null;
 
@@ -28,15 +42,17 @@ async function startServer() {
     return 3000;
   }
 
-  // In production, start the built Next.js server locally
+  log("Initializing Next.js production engine...");
   const next = require("next");
   const nextApp = next({
     dev: false,
     dir: appDir,
+    hostname: "127.0.0.1",
   });
   const handle = nextApp.getRequestHandler();
 
   await nextApp.prepare();
+  log("Next.js production engine prepared successfully.");
 
   return new Promise((resolve, reject) => {
     const server = http.createServer(async (req, res) => {
@@ -44,20 +60,21 @@ async function startServer() {
         const parsedUrl = parse(req.url, true);
         await handle(req, res, parsedUrl);
       } catch (err) {
-        console.error("Error handling request:", req.url, err);
+        log("Server request error on URL:", req.url, err.message, err.stack);
         res.statusCode = 500;
-        res.end("Internal server error");
+        res.end(`Internal server error: ${err.message}`);
       }
     });
 
     server.listen(0, "127.0.0.1", () => {
       const port = server.address().port;
       serverInstance = server;
-      console.log(`DENTO Continuity server listening on http://127.0.0.1:${port}`);
+      log(`DENTO Continuity server listening on http://127.0.0.1:${port}`);
       resolve(port);
     });
 
     server.on("error", (err) => {
+      log("Server listen error:", err.message);
       reject(err);
     });
   });
@@ -68,7 +85,7 @@ async function createWindow() {
   try {
     port = await startServer();
   } catch (err) {
-    console.error("Failed to start internal server:", err);
+    log("Failed to start internal server:", err.message, err.stack);
   }
 
   mainWindow = new BrowserWindow({
@@ -92,6 +109,7 @@ async function createWindow() {
     ? `http://localhost:${port}/front-desk`
     : `http://127.0.0.1:${port}/front-desk`;
 
+  log("Loading start URL in window:", startUrl);
   mainWindow.loadURL(startUrl);
 
   mainWindow.once("ready-to-show", () => {

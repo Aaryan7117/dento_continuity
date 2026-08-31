@@ -18,6 +18,7 @@
   "build": {
     "appId": "com.dentocontinuity.studio",
     "productName": "DENTO Continuity",
+    "asar": false,
     "directories": {
       "output": "dist-desktop"
     },
