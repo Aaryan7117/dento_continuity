@@ -262,7 +262,7 @@ function buildDraft(appointment: NoShowWithHistory): Draft {
     fired.push("open_treatment_plan");
     reason.push(
       `It sits inside an accepted plan still in progress: "${s.openPlan.title}"${
-        s.openPlan.cost ? ` (${naira(s.openPlan.cost)})` : ""
+        s.openPlan.cost ? ` (${rupees(s.openPlan.cost)})` : ""
       }.`
     );
   }
@@ -270,7 +270,7 @@ function buildDraft(appointment: NoShowWithHistory): Draft {
   if (s.unbilled > 0) {
     fired.push(s.overdueBilling ? "billing_overdue" : "billing_unbilled");
     reason.push(
-      `${naira(s.unbilled)} of accepted treatment is ${
+      `${rupees(s.unbilled)} of accepted treatment is ${
         s.overdueBilling ? "overdue" : "still unbilled"
       }.`
     );
@@ -310,7 +310,7 @@ function buildDraft(appointment: NoShowWithHistory): Draft {
   // With no clinical hook to point at, the slot's own value is the argument.
   if (fired.length === 0 && s.missedValue) {
     fired.push("slot_value");
-    reason.push(`The slot itself was worth ${naira(s.missedValue)}.`);
+    reason.push(`The slot itself was worth ${rupees(s.missedValue)}.`);
   }
 
   // -- Patient-facing message ------------------------------------------------
@@ -347,7 +347,7 @@ function buildDraft(appointment: NoShowWithHistory): Draft {
 // Wording helpers
 // ---------------------------------------------------------------------------
 
-const naira = (amount: number) => `₦${Math.round(amount).toLocaleString("en-NG")}`;
+const rupees = (amount: number) => `₹${Math.round(amount).toLocaleString("en-IN")}`;
 
 const plural = (n: number, noun: string) => `${n} ${noun}${n === 1 ? "" : "s"}`;
 

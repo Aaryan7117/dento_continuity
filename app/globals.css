@@ -1,22 +1,31 @@
 @import "tailwindcss";
 
+/* Class-based dark mode, so a toggle drives it rather than the OS alone. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-sans: var(--font-outfit), system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-cormorant), ui-serif, Georgia, serif;
+  --font-body: var(--font-outfit), system-ui, -apple-system, sans-serif;
 
-  /* ── Distinctive palette: deep teal + warm stone ── */
-  --color-primary-50: #effefb;
-  --color-primary-100: #c8fff4;
-  --color-primary-200: #91fee9;
-  --color-primary-300: #52f5db;
-  --color-primary-400: #1edec6;
-  --color-primary-500: #06c4ae;
-  --color-primary-600: #019d8e;
-  --color-primary-700: #067d73;
-  --color-primary-800: #0a635d;
-  --color-primary-900: #0d524d;
+  /* ── Brand ramp: deep teal ── */
+  --color-teal-50: #effefb;
+  --color-teal-100: #c8fff4;
+  --color-teal-200: #91fee9;
+  --color-teal-300: #52f5db;
+  --color-teal-400: #1edec6;
+  --color-teal-500: #06c4ae;
+  --color-teal-600: #019d8e;
+  --color-teal-700: #067d73;
+  --color-teal-800: #0a635d;
+  --color-teal-900: #0d524d;
 
-  --color-accent-500: #e67e22;
-  --color-accent-600: #d35400;
+  /* ── Accent ramp: brass. Reserved for money and recovery moments. ── */
+  --color-brass-300: #f0dca0;
+  --color-brass-400: #e5c368;
+  --color-brass-500: #d4af37;
+  --color-brass-600: #b8942b;
+  --color-brass-700: #8f7221;
 
   /* Status colors */
   --color-status-scheduled: #0ea5e9;
@@ -35,7 +44,8 @@
   --color-billing-pending: #f59e0b;
   --color-billing-overdue: #ef4444;
 
-  /* Finding type colors for odontogram */
+  /* Finding type colors for odontogram. Deliberately identical in both
+     themes — clinical colour coding must not shift meaning. */
   --color-finding-caries: #ef4444;
   --color-finding-restoration: #0ea5e9;
   --color-finding-crown: #f59e0b;
@@ -48,6 +58,23 @@
   --color-finding-extraction-indicated: #dc2626;
 }
 
+/* `inline` makes these emit var() at the use site instead of copying the value,
+   so redefining the underlying var under .dark flips every utility built on it.
+   That's what lets `bg-surface text-ink` serve both themes with no dark: variant. */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-accent: var(--accent);
+}
+
 /* ── Custom easing curves (Emil Kowalski) ── */
 :root {
   /* Strong ease-out for UI interactions — instant feedback */
@@ -56,21 +83,104 @@
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   /* iOS-like drawer curve */
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
 
-  /* Warm stone palette */
-  --background: #fafaf9;       /* stone-50 */
-  --foreground: #1c1917;       /* stone-900 */
+/* ── Light: warm porcelain ── */
+:root {
+  --canvas: #fafaf9;
   --surface: #ffffff;
-  --surface-hover: #f5f5f4;    /* stone-100 */
-  --border: rgba(28, 25, 23, 0.08);
-  --border-strong: rgba(28, 25, 23, 0.15);
-  --text-secondary: #78716c;   /* stone-500 */
-  --text-tertiary: #a8a29e;    /* stone-400 */
+  --raised: #f5f5f4;
+  --line: rgba(28, 25, 23, 0.09);
+  --line-strong: rgba(28, 25, 23, 0.16);
+  --ink: #1c1917;
+  --ink-muted: #6b6259;
+  --ink-faint: #8f867e;
+  --brand: #019d8e;
+  --brand-soft: rgba(1, 157, 142, 0.09);
+  /* Triplet form so alpha washes can be written rgb(var(--brand-rgb) / 0.1)
+     and still follow the theme. */
+  --brand-rgb: 1 157 142;
+  --accent: #b8942b;
+
+  --shadow-contact: rgba(28, 25, 23, 0.05);
+  --shadow-ambient: rgba(28, 25, 23, 0.07);
+  --glass-tint: rgba(255, 255, 255, 0.72);
+  --glass-edge: rgba(255, 255, 255, 0.5);
+  --scrim: rgba(28, 25, 23, 0.5);
+  --scrollbar: rgba(120, 113, 108, 0.25);
+  --scrollbar-hover: rgba(120, 113, 108, 0.45);
+}
+
+/* ── Dark: warm charcoal, not blue-black. Brand and accent lighten so they
+   still clear contrast against a dark surface. ── */
+.dark {
+  --canvas: #14110f;
+  --surface: #1c1917;
+  --raised: #262220;
+  --line: rgba(250, 250, 249, 0.10);
+  --line-strong: rgba(250, 250, 249, 0.18);
+  --ink: #fafaf9;
+  --ink-muted: #b5aca4;
+  --ink-faint: #8a8079;
+  --brand: #1edec6;
+  --brand-soft: rgba(30, 222, 198, 0.12);
+  --brand-rgb: 30 222 198;
+  --accent: #e5c368;
+
+  --shadow-contact: rgba(0, 0, 0, 0.45);
+  --shadow-ambient: rgba(0, 0, 0, 0.6);
+  --glass-tint: rgba(28, 25, 23, 0.72);
+  --glass-edge: rgba(250, 250, 249, 0.08);
+  --scrim: rgba(10, 8, 7, 0.66);
+  --scrollbar: rgba(250, 250, 249, 0.18);
+  --scrollbar-hover: rgba(250, 250, 249, 0.34);
+}
+
+/* ── Status tones ──
+   Each tone is an rgb triplet for alpha washes, plus a text colour that flips:
+   a 700-weight ink that reads on white is unreadable on charcoal, and the
+   200-weight that reads on charcoal disappears on white. The saturated dot
+   colour is shared, since a filled dot carries its own contrast. */
+:root {
+  --tone-sky: 14 165 233;
+  --tone-indigo: 99 102 241;
+  --tone-emerald: 16 185 129;
+  --tone-amber: 245 158 11;
+  --tone-red: 239 68 68;
+  --tone-neutral: 120 113 108;
+  --tone-violet: 139 92 246;
+
+  --tone-sky-ink: #0369a1;
+  --tone-indigo-ink: #4338ca;
+  --tone-emerald-ink: #047857;
+  --tone-amber-ink: #b45309;
+  --tone-red-ink: #b91c1c;
+  --tone-neutral-ink: #57534e;
+  --tone-violet-ink: #6d28d9;
+}
+
+.dark {
+  --tone-sky-ink: #7dd3fc;
+  --tone-indigo-ink: #a5b4fc;
+  --tone-emerald-ink: #6ee7b7;
+  --tone-amber-ink: #fcd34d;
+  --tone-red-ink: #fca5a5;
+  --tone-neutral-ink: #d6d3d1;
+  --tone-violet-ink: #c4b5fd;
+}
+
+/* ── Brand gradients ──
+   Deliberately the same in both themes. These are self-contained filled chips
+   (avatars, logo mark, primary buttons) carrying white text, so their contrast
+   comes from the fill, not from the page behind them. */
+:root {
+  --grad-brand: linear-gradient(135deg, #019d8e, #067d73);
+  --grad-brand-deep: linear-gradient(135deg, #019d8e, #0d524d);
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: var(--canvas);
+  color: var(--ink);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
@@ -79,11 +189,11 @@ body {
 
 /* ── Typography: size-specific tracking & leading ── */
 h1, h2, h3 {
-  letter-spacing: -0.025em;
+  letter-spacing: 0;
   line-height: 1.15;
 }
 
-h1 { letter-spacing: -0.03em; }
+h1 { letter-spacing: 0; }
 
 p, span, td, th, label, li {
   letter-spacing: 0;
@@ -178,8 +288,8 @@ button.no-press:active, [data-no-press]:active {
 
 /* ── Pulse ring for "today" highlights ── */
 @keyframes pulseRing {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(1, 157, 142, 0.4); }
-  50% { box-shadow: 0 0 0 6px rgba(1, 157, 142, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 var(--brand-soft); }
+  50% { box-shadow: 0 0 0 6px transparent; }
 }
 
 .pulse-today {
@@ -189,24 +299,65 @@ button.no-press:active, [data-no-press]:active {
 /* ── Card & surface styling ── */
 .card {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--line);
   border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
+  box-shadow: 0 1px 3px var(--shadow-contact), 0 1px 2px var(--shadow-contact);
   transition: box-shadow 200ms var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+    box-shadow: 0 4px 12px var(--shadow-ambient), 0 1px 3px var(--shadow-contact);
   }
 }
 
 /* ── Glassmorphism (Apple-style translucent chrome) ── */
 .glass {
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--glass-tint);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  border-bottom: 1px solid var(--glass-edge);
+}
+
+/* ── Primary action button ──
+   Defined once so the white-on-teal pairing can't drift out of contrast when
+   the theme flips: the fill is a fixed gradient, so white always reads on it. */
+.btn-primary {
+  background: var(--grad-brand);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 2px var(--shadow-contact);
+  transition: box-shadow 200ms var(--ease-out), opacity 200ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover:not(:disabled) {
+    box-shadow: 0 4px 14px rgb(var(--brand-rgb) / 0.32);
+  }
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+}
+
+/* ── Theme toggle icons ──
+   Driven by the .dark class rather than React state, so the correct icon is
+   already right at first paint and there's no cross-fade on load. */
+.theme-icon-sun,
+.theme-icon-moon {
+  transition: opacity 200ms var(--ease-out), transform 300ms var(--ease-out);
+}
+
+.theme-icon-sun  { opacity: 1; transform: rotate(0deg); }
+.theme-icon-moon { opacity: 0; transform: rotate(60deg); }
+.dark .theme-icon-sun  { opacity: 0; transform: rotate(-60deg); }
+.dark .theme-icon-moon { opacity: 1; transform: rotate(0deg); }
+
+/* ── Modal scrim ── */
+.scrim {
+  background: var(--scrim);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 /* ── Custom scrollbar (subtle) ── */
@@ -218,11 +369,11 @@ button.no-press:active, [data-no-press]:active {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(120, 113, 108, 0.25);
+  background-color: var(--scrollbar);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(120, 113, 108, 0.45);
+  background-color: var(--scrollbar-hover);
 }
 
 /* ── Tooth SVG hover effect (gated) ── */
@@ -234,6 +385,12 @@ button.no-press:active, [data-no-press]:active {
 }
 .tooth-cell {
   transition: filter 150ms var(--ease-out);
+}
+
+/* Dark mode inverts the direction — brightness(0.92) reads as "nothing happened"
+   on a dark surface. */
+.dark .tooth-cell:hover {
+  filter: brightness(1.12);
 }
 
 /* ── Reduced motion: gentler, not zero ── */
@@ -258,3 +415,369 @@ button.no-press:active, [data-no-press]:active {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   EDITORIAL — the marketing surface. Scoped to [data-theme="editorial"]
+   so the clinical app inherits none of its styling, but it now derives
+   from the same token layer and follows the light/dark toggle.
+   Deliberately higher-contrast than the app: it's a pitch, not a tool.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Paint the real canvas too, so overscroll doesn't flash the app background. */
+body:has([data-theme="editorial"]) {
+  background-color: var(--stage);
+}
+
+[data-theme="editorial"] {
+  /* Light: cool porcelain and ink, with jewellery-warm champagne. */
+  --stage: #f7f6f2;
+  --ash: #fffdfa;
+  --hairline: rgba(30, 28, 24, 0.11);
+
+  --gold: #9f7d35;
+  --gold-light: #d8b868;
+  --gold-wash: rgba(216, 184, 104, 0.10);
+  --gold-hairline: rgba(159, 125, 53, 0.25);
+
+  --champagne: #d8b868;
+  --ivory: #fff7e8;
+  --jade: #39c6b3;
+  --oxblood: #7f3136;
+
+  --teal: #147f73;
+  --teal-light: #1fb6a5;
+  --teal-wash: rgba(31, 182, 165, 0.10);
+
+  --ink: #12100d;
+  --ink-soft: #2c2822;
+  --ink-muted: #665e52;
+  --ink-faint: #8a8175;
+
+  /* Re-point the shared app tokens at editorial equivalents, so components
+     used on both surfaces (ThemeToggle) pick up the right hairline. */
+  --line: var(--hairline);
+  --line-strong: var(--gold-hairline);
+
+  --lift-1: 0 1px 2px rgba(28, 25, 23, 0.05), 0 12px 32px rgba(28, 25, 23, 0.07);
+  --lift-2: 0 1px 2px rgba(28, 25, 23, 0.06), 0 24px 60px rgba(28, 25, 23, 0.10);
+
+  --pane-tint: rgba(255, 253, 250, 0.84);
+  --glass-fill: rgba(18, 16, 13, 0.035);
+  --glass-fill-hover: rgba(18, 16, 13, 0.07);
+  --grain-opacity: 0.012;
+  --vignette: radial-gradient(
+    ellipse 90% 70% at 50% 40%,
+    transparent 50%,
+    rgba(120, 100, 60, 0.10) 100%
+  );
+
+  background-color: var(--stage);
+  color: var(--ink-soft);
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.dark [data-theme="editorial"] {
+  /* Dark: obsidian, not blue-black. */
+  --stage: #080909;
+  --ash: #101111;
+  --hairline: rgba(255, 255, 255, 0.08);
+
+  --gold: #c8a14c;
+  --gold-light: #e1c57b;
+  --gold-wash: rgba(216, 184, 104, 0.10);
+  --gold-hairline: rgba(216, 184, 104, 0.25);
+
+  --champagne: #d8b868;
+  --ivory: #fff7e8;
+  --jade: #39c6b3;
+  --oxblood: #b4545d;
+
+  --teal: #1f9a8d;
+  --teal-light: #39c6b3;
+  --teal-wash: rgba(57, 198, 179, 0.11);
+
+  --ink: #ffffff;
+  --ink-soft: #cbd5e1;
+
+  --ink-muted: #94a3b8;
+  --ink-faint: #5b6873;
+
+  /* Multi-layer depth: sharp contact + diffuse ambient */
+  --lift-1: 0 2px 4px rgba(0, 0, 0, 0.5), 0 16px 40px rgba(0, 0, 0, 0.7);
+  --lift-2: 0 2px 4px rgba(0, 0, 0, 0.5), 0 28px 70px rgba(0, 0, 0, 0.8);
+
+  --pane-tint: rgba(19, 23, 26, 0.72);
+  --glass-fill: rgba(255, 255, 255, 0.04);
+  --glass-fill-hover: rgba(255, 255, 255, 0.07);
+  --grain-opacity: 0.035;
+  --vignette: radial-gradient(
+    ellipse 90% 70% at 50% 40%,
+    transparent 40%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+}
+
+/* ── Editorial type ── */
+[data-theme="editorial"] .display {
+  font-family: var(--font-cormorant), ui-serif, Georgia, serif;
+  font-weight: 300;
+  letter-spacing: 0;
+  line-height: 1.04;
+  color: var(--ink);
+}
+
+[data-theme="editorial"] .display em {
+  font-style: italic;
+  font-weight: 300;
+  color: var(--gold-light);
+}
+
+/* Wide-tracked gold micro-label */
+[data-theme="editorial"] .eyebrow {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+[data-theme="editorial"] .numeral {
+  font-family: var(--font-cormorant), ui-serif, serif;
+  font-variant-numeric: tabular-nums;
+  font-weight: 300;
+}
+
+/* ── Glass surfaces ── */
+[data-theme="editorial"] .pane {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.035));
+  backdrop-filter: blur(24px) saturate(135%);
+  -webkit-backdrop-filter: blur(24px) saturate(135%);
+  border: 1px solid var(--hairline);
+}
+
+[data-theme="editorial"] .pane-solid {
+  background: var(--ash);
+  border: 1px solid var(--hairline);
+}
+
+/* Hairline rule that fades at both ends — jewellery-catalogue divider */
+[data-theme="editorial"] .rule-fade {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--gold-hairline) 20%,
+    var(--gold-hairline) 80%,
+    transparent
+  );
+}
+
+/* ── Filmic grain + vignette ── */
+[data-theme="editorial"] .grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+[data-theme="editorial"] .vignette::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  pointer-events: none;
+  background: var(--vignette);
+}
+
+/* ── Champagne CTA ── */
+[data-theme="editorial"] .btn-gold {
+  position: relative;
+  background: linear-gradient(140deg, #fff0b8 0%, #d8b868 46%, #a98137 100%);
+  color: #100c02;
+  font-weight: 600;
+  border: 1px solid rgba(255, 236, 179, 0.45);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.35) inset,
+    0 2px 4px rgba(0, 0, 0, 0.5),
+    0 10px 34px rgba(212, 175, 55, 0.26);
+  transition:
+    box-shadow 260ms var(--ease-out),
+    transform 160ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-theme="editorial"] .btn-gold:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.45) inset,
+      0 2px 4px rgba(0, 0, 0, 0.5),
+      0 16px 48px rgba(212, 175, 55, 0.42);
+  }
+}
+
+[data-theme="editorial"] .btn-glass {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--hairline);
+  color: var(--ink);
+  transition:
+    background 200ms var(--ease-out),
+    border-color 200ms var(--ease-out),
+    color 200ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-theme="editorial"] .btn-glass:hover {
+    background: var(--glass-fill-hover);
+    border-color: var(--gold-hairline);
+    color: var(--ink);
+  }
+}
+
+/* Hover sets translateY, so :active needs to restate the press or it's lost. */
+[data-theme="editorial"] .btn-gold:active,
+[data-theme="editorial"] .btn-glass:active {
+  transform: scale(0.97);
+  transition: transform 100ms var(--ease-out);
+}
+
+/* ── Enamel sheen sweep (teeth) ── */
+@keyframes sheenSweep {
+  from { transform: translateX(-140%) rotate(18deg); }
+  to   { transform: translateX(240%) rotate(18deg); }
+}
+
+/* ── Slow gold breathing for ambient orbs ── */
+@keyframes breathe {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%      { opacity: 0.85; transform: scale(1.08); }
+}
+
+/* ── Golden-ratio guides fade in from the midline ── */
+@keyframes guidesIn {
+  from { opacity: 0; transform: scaleX(0.9); }
+  to   { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes heroRise {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes consoleIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes softScan {
+  from { transform: translateX(-120%); }
+  to { transform: translateX(120%); }
+}
+
+[data-theme="editorial"] .hero-kicker,
+[data-theme="editorial"] .hero-title {
+  animation: heroRise 760ms var(--ease-out) both;
+}
+
+[data-theme="editorial"] .hero-title {
+  animation-delay: 80ms;
+}
+
+[data-theme="editorial"] .hero-console {
+  animation: consoleIn 820ms var(--ease-out) 160ms both;
+}
+
+[data-theme="editorial"] .hero-stagger {
+  opacity: 0;
+  animation: heroRise 560ms var(--ease-out) both;
+}
+
+[data-theme="editorial"] .hero-console::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  pointer-events: none;
+  border-radius: 8px;
+  background: linear-gradient(105deg, transparent 12%, rgba(255, 255, 255, 0.18) 48%, transparent 72%);
+  opacity: 0.34;
+  transform: translateX(-120%);
+  animation: softScan 5.8s linear infinite;
+}
+
+[data-theme="editorial"] .guides {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: guidesIn 620ms var(--ease-out);
+}
+
+/* ── Reveal on scroll ── */
+[data-theme="editorial"] .reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 900ms var(--ease-out),
+    transform 900ms var(--ease-out);
+}
+
+[data-theme="editorial"] .reveal[data-shown="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+[data-theme="editorial"] ::selection {
+  background: var(--gold-hairline);
+  color: var(--ink);
+}
+
+[data-theme="editorial"] ::-webkit-scrollbar-thumb {
+  background-color: rgba(212, 175, 55, 0.22);
+}
+
+[data-theme="editorial"] ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(212, 175, 55, 0.4);
+}
+
+[data-theme="editorial"] :focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="editorial"] .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  [data-theme="editorial"] .breathe,
+  [data-theme="editorial"] .guides,
+  [data-theme="editorial"] .sheen,
+  [data-theme="editorial"] .hero-kicker,
+  [data-theme="editorial"] .hero-title,
+  [data-theme="editorial"] .hero-console,
+  [data-theme="editorial"] .hero-stagger,
+  [data-theme="editorial"] .hero-console::after {
+    animation: none !important;
+  }
+
+  [data-theme="editorial"] .hero-stagger {
+    opacity: 1;
+    transform: none;
+  }
+}
+

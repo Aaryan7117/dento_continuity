@@ -57,12 +57,12 @@ export default function FrontDeskScheduleClient({
         <div>
           <h1
             className="text-2xl font-bold flex items-center gap-2"
-            style={{ color: "var(--foreground)" }}
+            style={{ color: "var(--ink)" }}
           >
-            <CalendarClock className="w-6 h-6" style={{ color: "#019d8e" }} />
+            <CalendarClock className="w-6 h-6" style={{ color: "var(--brand)" }} />
             Today&apos;s Schedule
           </h1>
-          <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
+          <p className="text-sm mt-1" style={{ color: "var(--ink-muted)" }}>
             {schedule.length} appointment{schedule.length !== 1 ? "s" : ""}{" "}
             {filterLabel ? (
               <span className="inline-flex items-center gap-1">
@@ -80,9 +80,9 @@ export default function FrontDeskScheduleClient({
               href="/front-desk"
               className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold"
               style={{
-                background: "rgba(239, 68, 68, 0.08)",
-                color: "#b91c1c",
-                border: "1px solid rgba(239, 68, 68, 0.15)",
+                background: "rgb(var(--tone-red) / 0.08)",
+                color: "var(--tone-red-ink)",
+                border: "1px solid rgb(var(--tone-red) / 0.15)",
               }}
             >
               <X className="w-3.5 h-3.5" />
@@ -94,9 +94,9 @@ export default function FrontDeskScheduleClient({
             onClick={handleOpenManualWaitlist}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm"
             style={{
-              background: "rgba(245, 158, 11, 0.1)",
-              color: "#b45309",
-              border: "1px solid rgba(245, 158, 11, 0.25)",
+              background: "rgb(var(--tone-amber) / 0.1)",
+              color: "var(--tone-amber-ink)",
+              border: "1px solid rgb(var(--tone-amber) / 0.25)",
             }}
           >
             <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
@@ -107,7 +107,7 @@ export default function FrontDeskScheduleClient({
             href="/appointments/new"
             className="inline-flex justify-center items-center gap-1.5 px-4 py-2 text-white rounded-xl text-xs font-semibold shadow-sm"
             style={{
-              background: "linear-gradient(135deg, #019d8e, #067d73)",
+              background: "var(--grad-brand)",
               transition: "opacity 150ms var(--ease-out)",
             }}
           >
@@ -121,7 +121,7 @@ export default function FrontDeskScheduleClient({
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr style={{ borderBottom: "1px solid var(--border)" }}>
+              <tr style={{ borderBottom: "1px solid var(--line)" }}>
                 {[
                   { label: "Time", icon: Clock, hide: "" },
                   { label: "Patient", hide: "" },
@@ -133,7 +133,7 @@ export default function FrontDeskScheduleClient({
                   <th
                     key={col.label}
                     className={`text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider ${col.hide}`}
-                    style={{ color: "var(--text-tertiary)" }}
+                    style={{ color: "var(--ink-faint)" }}
                   >
                     {col.label}
                   </th>
@@ -147,16 +147,16 @@ export default function FrontDeskScheduleClient({
                     <div className="flex flex-col items-center">
                       <div
                         className="w-12 h-12 rounded-full flex items-center justify-center mb-3"
-                        style={{ background: "var(--surface-hover)" }}
+                        style={{ background: "var(--raised)" }}
                       >
                         <CalendarClock
                           className="w-5 h-5"
-                          style={{ color: "var(--text-tertiary)" }}
+                          style={{ color: "var(--ink-faint)" }}
                         />
                       </div>
                       <p
                         className="font-semibold text-sm"
-                        style={{ color: "var(--foreground)" }}
+                        style={{ color: "var(--ink)" }}
                       >
                         {filter
                           ? `No ${filterLabel?.toLowerCase()} found`
@@ -164,7 +164,7 @@ export default function FrontDeskScheduleClient({
                       </p>
                       <p
                         className="text-xs mt-1"
-                        style={{ color: "var(--text-tertiary)" }}
+                        style={{ color: "var(--ink-faint)" }}
                       >
                         {filter
                           ? "Try clearing the filter."
@@ -173,7 +173,7 @@ export default function FrontDeskScheduleClient({
                       {filter && (
                         <Link
                           href="/front-desk"
-                          className="mt-3 px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-lg transition-colors"
+                          className="mt-3 px-3 py-1.5 bg-raised hover:bg-line text-ink text-xs font-semibold rounded-lg transition-colors"
                         >
                           Show all appointments
                         </Link>
@@ -187,16 +187,16 @@ export default function FrontDeskScheduleClient({
                   key={apt.id}
                   className="stagger-row"
                   style={{
-                    borderBottom: "1px solid var(--border)",
+                    borderBottom: "1px solid var(--line)",
                     background:
                       apt.status === "NO_SHOW"
-                        ? "rgba(239, 68, 68, 0.03)"
+                        ? "rgb(var(--tone-red) / 0.03)"
                         : "transparent",
                   }}
                 >
                   <td
                     className="px-5 py-4 whitespace-nowrap font-medium text-sm"
-                    style={{ color: "var(--foreground)" }}
+                    style={{ color: "var(--ink)" }}
                   >
                     {new Date(apt.startsAt).toLocaleTimeString(undefined, {
                       hour: "2-digit",
@@ -209,7 +209,7 @@ export default function FrontDeskScheduleClient({
                       className="font-semibold text-sm no-press"
                       data-no-press
                       style={{
-                        color: "#019d8e",
+                        color: "var(--brand)",
                         transition: "color 150ms var(--ease-out)",
                       }}
                     >
@@ -217,20 +217,20 @@ export default function FrontDeskScheduleClient({
                     </Link>
                     <div
                       className="text-xs mt-0.5"
-                      style={{ color: "var(--text-tertiary)" }}
+                      style={{ color: "var(--ink-faint)" }}
                     >
                       {apt.patient.phone}
                     </div>
                   </td>
                   <td
                     className="px-5 py-4 hidden md:table-cell"
-                    style={{ color: "var(--text-secondary)" }}
+                    style={{ color: "var(--ink-muted)" }}
                   >
                     {apt.reason ?? "—"}
                   </td>
                   <td
                     className="px-5 py-4 hidden lg:table-cell"
-                    style={{ color: "var(--text-secondary)" }}
+                    style={{ color: "var(--ink-muted)" }}
                   >
                     {apt.provider?.name ?? "—"}
                   </td>
@@ -247,9 +247,9 @@ export default function FrontDeskScheduleClient({
                         <span
                           className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide"
                           style={{
-                            background: "rgba(245, 158, 11, 0.1)",
-                            color: "#b45309",
-                            border: "1px solid rgba(245, 158, 11, 0.2)",
+                            background: "rgb(var(--tone-amber) / 0.1)",
+                            color: "var(--tone-amber-ink)",
+                            border: "1px solid rgb(var(--tone-amber) / 0.2)",
                           }}
                         >
                           <Sparkles className="w-3 h-3" /> Agent
@@ -259,10 +259,10 @@ export default function FrontDeskScheduleClient({
                   </td>
                   <td
                     className="px-5 py-4 font-medium hidden sm:table-cell"
-                    style={{ color: "var(--text-secondary)" }}
+                    style={{ color: "var(--ink-muted)" }}
                   >
                     {apt.estimatedValue != null
-                      ? `₦${apt.estimatedValue.toLocaleString()}`
+                      ? `₹${apt.estimatedValue.toLocaleString("en-IN")}`
                       : "—"}
                   </td>
                 </tr>

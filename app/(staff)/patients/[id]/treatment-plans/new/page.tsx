@@ -34,13 +34,13 @@ export default function NewTreatmentPlanPage() {
 
   return (
     <div className="max-w-lg mx-auto mt-8">
-      <h1 className="text-xl font-semibold text-gray-900 mb-4">
+      <h1 className="text-xl font-semibold text-ink mb-4">
         Create Treatment Plan
       </h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-ink mb-1">
             Title *
           </label>
           <input
@@ -48,13 +48,13 @@ export default function NewTreatmentPlanPage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Composite restoration — upper right first molar"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-line-strong rounded-md px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-ink mb-1">
             Description
           </label>
           <textarea
@@ -62,13 +62,13 @@ export default function NewTreatmentPlanPage() {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Treatment details, number of visits, etc."
             rows={3}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="w-full border border-line-strong rounded-md px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand resize-none"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Estimated Cost (₦)
+          <label className="block text-sm font-medium text-ink mb-1">
+            Estimated Cost (₹)
           </label>
           <input
             type="number"
@@ -77,7 +77,7 @@ export default function NewTreatmentPlanPage() {
             value={estimatedCost}
             onChange={(e) => setEstimatedCost(e.target.value)}
             placeholder="0.00"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-line-strong rounded-md px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand"
           />
         </div>
 
@@ -87,14 +87,14 @@ export default function NewTreatmentPlanPage() {
           <button
             type="submit"
             disabled={isPending || !title.trim()}
-            className="bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            className="btn-primary text-sm font-medium py-2 px-4 rounded-md disabled:opacity-50 transition-colors"
           >
             {isPending ? "Creating…" : "Create Plan"}
           </button>
           <button
             type="button"
             onClick={() => router.back()}
-            className="text-sm text-gray-600 py-2 px-4 rounded-md hover:bg-gray-100 transition-colors"
+            className="text-sm text-ink-muted py-2 px-4 rounded-md hover:bg-raised transition-colors"
           >
             Cancel
           </button>

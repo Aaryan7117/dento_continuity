@@ -1,29 +1,38 @@
 /**
- * Status badge with colored dot indicator. Uses semi-transparent backgrounds
- * that feel more refined than solid Tailwind bg-* colors.
+ * Status badge with colored dot indicator. Semi-transparent backgrounds rather
+ * than solid fills, so the badge sits on any surface in either theme.
  */
 
-const PALETTE: Record<string, { bg: string; dot: string; text: string }> = {
-  // Appointment
-  SCHEDULED: { bg: "rgba(14, 165, 233, 0.1)", dot: "#0ea5e9", text: "#0369a1" },
-  CONFIRMED: { bg: "rgba(99, 102, 241, 0.1)", dot: "#6366f1", text: "#4338ca" },
-  COMPLETED: { bg: "rgba(16, 185, 129, 0.1)", dot: "#10b981", text: "#047857" },
-  CANCELLED: { bg: "rgba(120, 113, 108, 0.1)", dot: "#78716c", text: "#57534e" },
-  NO_SHOW: { bg: "rgba(239, 68, 68, 0.1)", dot: "#ef4444", text: "#b91c1c" },
-  // Treatment plan
-  PROPOSED: { bg: "rgba(245, 158, 11, 0.1)", dot: "#f59e0b", text: "#b45309" },
-  ACCEPTED: { bg: "rgba(14, 165, 233, 0.1)", dot: "#0ea5e9", text: "#0369a1" },
-  // Billing
-  PAID: { bg: "rgba(16, 185, 129, 0.1)", dot: "#10b981", text: "#047857" },
-  PENDING: { bg: "rgba(245, 158, 11, 0.1)", dot: "#f59e0b", text: "#b45309" },
-  OVERDUE: { bg: "rgba(239, 68, 68, 0.1)", dot: "#ef4444", text: "#b91c1c" },
-  // Recommendation
-  APPROVED: { bg: "rgba(16, 185, 129, 0.1)", dot: "#10b981", text: "#047857" },
-  SENT: { bg: "rgba(16, 185, 129, 0.1)", dot: "#10b981", text: "#047857" },
-  DISMISSED: { bg: "rgba(120, 113, 108, 0.1)", dot: "#78716c", text: "#57534e" },
+type Tone = "sky" | "indigo" | "emerald" | "amber" | "red" | "neutral";
+
+const DOTS: Record<Tone, string> = {
+  sky: "#0ea5e9",
+  indigo: "#6366f1",
+  emerald: "#10b981",
+  amber: "#f59e0b",
+  red: "#ef4444",
+  neutral: "#78716c",
 };
 
-const FALLBACK = { bg: "rgba(120, 113, 108, 0.08)", dot: "#a8a29e", text: "#78716c" };
+const TONES: Record<string, Tone> = {
+  // Appointment
+  SCHEDULED: "sky",
+  CONFIRMED: "indigo",
+  COMPLETED: "emerald",
+  CANCELLED: "neutral",
+  NO_SHOW: "red",
+  // Treatment plan
+  PROPOSED: "amber",
+  ACCEPTED: "sky",
+  // Billing
+  PAID: "emerald",
+  PENDING: "amber",
+  OVERDUE: "red",
+  // Recommendation
+  APPROVED: "emerald",
+  SENT: "emerald",
+  DISMISSED: "neutral",
+};
 
 export default function StatusBadge({
   status,
@@ -32,20 +41,20 @@ export default function StatusBadge({
   status: string;
   className?: string;
 }) {
-  const palette = PALETTE[status] ?? FALLBACK;
+  const tone = TONES[status] ?? "neutral";
   const label = status.replace(/_/g, " ");
   return (
     <span
       className={`inline-flex items-center gap-1.5 px-2 py-[3px] rounded-md text-[11px] font-semibold uppercase tracking-wide ${className}`}
       style={{
-        background: palette.bg,
-        color: palette.text,
+        background: `rgb(var(--tone-${tone}) / 0.12)`,
+        color: `var(--tone-${tone}-ink)`,
       }}
       data-no-press
     >
       <span
         className="w-1.5 h-1.5 rounded-full shrink-0"
-        style={{ background: palette.dot }}
+        style={{ background: DOTS[tone] }}
       />
       {label}
     </span>

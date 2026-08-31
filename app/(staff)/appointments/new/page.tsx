@@ -40,8 +40,8 @@ export default async function NewAppointmentPage() {
 
   const inputStyle: React.CSSProperties = {
     background: "var(--surface)",
-    border: "1px solid var(--border)",
-    color: "var(--foreground)",
+    border: "1px solid var(--line)",
+    color: "var(--ink)",
   };
 
   return (
@@ -52,7 +52,7 @@ export default async function NewAppointmentPage() {
           className="p-2 rounded-lg no-press"
           data-no-press
           style={{
-            color: "var(--text-tertiary)",
+            color: "var(--ink-faint)",
             transition: "color 150ms var(--ease-out)",
           }}
         >
@@ -61,12 +61,12 @@ export default async function NewAppointmentPage() {
         <div>
           <h1
             className="text-2xl font-bold flex items-center gap-2"
-            style={{ color: "var(--foreground)" }}
+            style={{ color: "var(--ink)" }}
           >
-            <CalendarClock className="w-6 h-6" style={{ color: "#019d8e" }} />
+            <CalendarClock className="w-6 h-6" style={{ color: "var(--brand)" }} />
             Schedule Appointment
           </h1>
-          <p className="text-sm mt-0.5" style={{ color: "var(--text-secondary)" }}>
+          <p className="text-sm mt-0.5" style={{ color: "var(--ink-muted)" }}>
             Book a new visit for a patient.
           </p>
         </div>
@@ -76,7 +76,7 @@ export default async function NewAppointmentPage() {
         <form action={handleCreateAppointment} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-1.5 md:col-span-2 stagger-item">
-              <label className="text-[13px] font-semibold" style={{ color: "var(--foreground)" }}>
+              <label className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
                 Patient <span style={{ color: "#ef4444" }}>*</span>
               </label>
               <select
@@ -95,7 +95,7 @@ export default async function NewAppointmentPage() {
             </div>
 
             <div className="space-y-1.5 stagger-item">
-              <label className="text-[13px] font-semibold" style={{ color: "var(--foreground)" }}>
+              <label className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
                 Date <span style={{ color: "#ef4444" }}>*</span>
               </label>
               <input
@@ -108,7 +108,7 @@ export default async function NewAppointmentPage() {
             </div>
 
             <div className="space-y-1.5 stagger-item">
-              <label className="text-[13px] font-semibold" style={{ color: "var(--foreground)" }}>
+              <label className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
                 Time <span style={{ color: "#ef4444" }}>*</span>
               </label>
               <input
@@ -121,7 +121,7 @@ export default async function NewAppointmentPage() {
             </div>
 
             <div className="space-y-1.5 stagger-item">
-              <label className="text-[13px] font-semibold" style={{ color: "var(--foreground)" }}>
+              <label className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
                 Duration <span style={{ color: "#ef4444" }}>*</span>
               </label>
               <select
@@ -141,7 +141,7 @@ export default async function NewAppointmentPage() {
             </div>
 
             <div className="space-y-1.5 stagger-item">
-              <label className="text-[13px] font-semibold" style={{ color: "var(--foreground)" }}>
+              <label className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
                 Provider
               </label>
               <select
@@ -159,7 +159,7 @@ export default async function NewAppointmentPage() {
             </div>
 
             <div className="space-y-1.5 md:col-span-2 stagger-item">
-              <label className="text-[13px] font-semibold" style={{ color: "var(--foreground)" }}>
+              <label className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
                 Reason for Visit
               </label>
               <textarea
@@ -174,15 +174,15 @@ export default async function NewAppointmentPage() {
 
           <div
             className="pt-4 flex justify-end gap-2.5 stagger-item"
-            style={{ borderTop: "1px solid var(--border)" }}
+            style={{ borderTop: "1px solid var(--line)" }}
           >
             <Link
               href="/front-desk"
               className="px-4 py-2.5 text-sm font-semibold rounded-xl no-press"
               data-no-press
               style={{
-                color: "var(--text-secondary)",
-                border: "1px solid var(--border)",
+                color: "var(--ink-muted)",
+                border: "1px solid var(--line)",
               }}
             >
               Cancel
@@ -190,7 +190,7 @@ export default async function NewAppointmentPage() {
             <button
               type="submit"
               className="flex items-center gap-1.5 px-5 py-2.5 text-sm font-semibold text-white rounded-xl"
-              style={{ background: "linear-gradient(135deg, #019d8e, #067d73)" }}
+              style={{ background: "var(--grad-brand)" }}
             >
               <Save className="w-4 h-4" /> Schedule
             </button>

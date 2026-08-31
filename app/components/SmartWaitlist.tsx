@@ -84,8 +84,7 @@ export default function SmartWaitlist({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40"
-        style={{ background: "rgba(0,0,0,0.15)", backdropFilter: "blur(2px)" }}
+        className="fixed inset-0 z-40 scrim"
         onClick={onClose}
       />
 
@@ -93,30 +92,30 @@ export default function SmartWaitlist({
       <div
         className="fixed right-0 top-0 bottom-0 w-full max-w-md z-50 flex flex-col"
         style={{
-          background: "var(--background)",
-          borderLeft: "1px solid var(--border)",
-          boxShadow: "-8px 0 32px rgba(0,0,0,0.08)",
+          background: "var(--canvas)",
+          borderLeft: "1px solid var(--line)",
+          boxShadow: "-8px 0 32px var(--shadow-contact)",
           animation: "slideInRight 250ms var(--ease-drawer) forwards",
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5" style={{ borderBottom: "1px solid var(--border)" }}>
+        <div className="flex items-center justify-between p-5" style={{ borderBottom: "1px solid var(--line)" }}>
           <div>
-            <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: "var(--foreground)" }}>
+            <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: "var(--ink)" }}>
               <Zap className="w-5 h-5" style={{ color: "#f59e0b" }} />
               Smart Waitlist
             </h2>
             {slotLabel && (
-              <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
+              <p className="text-xs mt-1" style={{ color: "var(--ink-muted)" }}>
                 Fill the gap at <strong>{slotLabel}</strong>
               </p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-stone-100 transition-colors"
+            className="p-2 rounded-lg hover:bg-raised transition-colors"
           >
-            <X className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
+            <X className="w-4 h-4" style={{ color: "var(--ink-muted)" }} />
           </button>
         </div>
 
@@ -124,8 +123,8 @@ export default function SmartWaitlist({
         <div className="flex-1 overflow-y-auto p-5 space-y-3">
           {loading ? (
             <div className="flex flex-col items-center py-12">
-              <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#019d8e" }} />
-              <p className="text-xs mt-3" style={{ color: "var(--text-secondary)" }}>
+              <Loader2 className="w-6 h-6 animate-spin" style={{ color: "var(--brand)" }} />
+              <p className="text-xs mt-3" style={{ color: "var(--ink-muted)" }}>
                 Finding best-fit patients…
               </p>
             </div>
@@ -133,20 +132,20 @@ export default function SmartWaitlist({
             <div className="text-center py-12">
               <div
                 className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                style={{ background: "var(--surface-hover)" }}
+                style={{ background: "var(--raised)" }}
               >
-                <Users className="w-6 h-6" style={{ color: "var(--text-tertiary)" }} />
+                <Users className="w-6 h-6" style={{ color: "var(--ink-faint)" }} />
               </div>
-              <p className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>
+              <p className="font-semibold text-sm" style={{ color: "var(--ink)" }}>
                 No patients on the waitlist
               </p>
-              <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>
+              <p className="text-xs mt-1" style={{ color: "var(--ink-faint)" }}>
                 Patients can be added from their chart or during booking.
               </p>
             </div>
           ) : (
             <>
-              <p className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color: "var(--text-tertiary)" }}>
+              <p className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color: "var(--ink-faint)" }}>
                 {candidates.length} candidate{candidates.length !== 1 ? "s" : ""} ranked by fit
               </p>
               {candidates.map((candidate, idx) => (
@@ -154,8 +153,8 @@ export default function SmartWaitlist({
                   key={candidate.id}
                   className="rounded-xl p-4 stagger-item"
                   style={{
-                    border: "1px solid var(--border)",
-                    background: idx === 0 ? "rgba(245, 158, 11, 0.04)" : "var(--surface)",
+                    border: "1px solid var(--line)",
+                    background: idx === 0 ? "rgb(var(--tone-amber) / 0.04)" : "var(--surface)",
                     transition: "transform 150ms var(--ease-out)",
                   }}
                 >
@@ -166,7 +165,7 @@ export default function SmartWaitlist({
                         style={{
                           background: idx === 0
                             ? "linear-gradient(135deg, #f59e0b, #b45309)"
-                            : "linear-gradient(135deg, #019d8e, #0d524d)",
+                            : "var(--grad-brand-deep)",
                         }}
                       >
                         {candidate.patient.firstName[0]}
@@ -174,16 +173,16 @@ export default function SmartWaitlist({
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>
+                          <span className="font-semibold text-sm" style={{ color: "var(--ink)" }}>
                             {candidate.patient.firstName} {candidate.patient.lastName}
                           </span>
                           {idx === 0 && (
-                            <span className="flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ background: "rgba(245, 158, 11, 0.15)", color: "#b45309" }}>
+                            <span className="flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ background: "rgb(var(--tone-amber) / 0.15)", color: "var(--tone-amber-ink)" }}>
                               <Star className="w-2.5 h-2.5" /> Best Match
                             </span>
                           )}
                         </div>
-                        <span className="flex items-center gap-1 text-[11px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>
+                        <span className="flex items-center gap-1 text-[11px] mt-0.5" style={{ color: "var(--ink-faint)" }}>
                           <Phone className="w-3 h-3" />
                           {candidate.patient.phone}
                         </span>
@@ -192,8 +191,8 @@ export default function SmartWaitlist({
                     <span
                       className="text-[10px] font-bold px-2 py-1 rounded-lg shrink-0"
                       style={{
-                        background: candidate.score >= 80 ? "rgba(16, 185, 129, 0.1)" : candidate.score >= 60 ? "rgba(14, 165, 233, 0.1)" : "var(--surface-hover)",
-                        color: candidate.score >= 80 ? "#047857" : candidate.score >= 60 ? "#0369a1" : "var(--text-tertiary)",
+                        background: candidate.score >= 80 ? "rgb(var(--tone-emerald) / 0.1)" : candidate.score >= 60 ? "rgb(var(--tone-sky) / 0.1)" : "var(--raised)",
+                        color: candidate.score >= 80 ? "var(--tone-emerald-ink)" : candidate.score >= 60 ? "var(--tone-sky-ink)" : "var(--ink-faint)",
                       }}
                     >
                       {candidate.score}% fit
@@ -201,10 +200,10 @@ export default function SmartWaitlist({
                   </div>
 
                   {/* Details */}
-                  <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px]" style={{ color: "var(--text-secondary)" }}>
+                  <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px]" style={{ color: "var(--ink-muted)" }}>
                     {candidate.procedureType && (
                       <span className="flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" style={{ color: "#019d8e" }} />
+                        <CheckCircle2 className="w-3 h-3" style={{ color: "var(--brand)" }} />
                         {candidate.procedureType}
                       </span>
                     )}
@@ -232,7 +231,7 @@ export default function SmartWaitlist({
                   </div>
 
                   {candidate.note && (
-                    <p className="text-[11px] mt-2 italic" style={{ color: "var(--text-tertiary)" }}>
+                    <p className="text-[11px] mt-2 italic" style={{ color: "var(--ink-faint)" }}>
                       &ldquo;{candidate.note}&rdquo;
                     </p>
                   )}
@@ -243,7 +242,7 @@ export default function SmartWaitlist({
                     disabled={sendingId === candidate.id}
                     className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold text-white transition-opacity disabled:opacity-60"
                     style={{
-                      background: "linear-gradient(135deg, #019d8e, #067d73)",
+                      background: "var(--grad-brand)",
                     }}
                   >
                     {sendingId === candidate.id ? (

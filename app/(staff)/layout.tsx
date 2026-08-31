@@ -13,6 +13,7 @@ import {
 import { useState } from "react";
 import GlobalSearch from "@/app/components/GlobalSearch";
 import NotificationCenter from "@/app/components/NotificationCenter";
+import ThemeToggle from "@/app/components/ThemeToggle";
 
 const navigation = [
   { name: "Front Desk", href: "/front-desk", icon: Activity },
@@ -26,15 +27,14 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen flex" style={{ background: "var(--background)" }}>
+    <div className="min-h-screen flex" style={{ background: "var(--canvas)" }}>
       {/* Mobile overlay — fades in, not instant */}
       <div
-        className={`fixed inset-0 z-40 lg:hidden transition-opacity duration-200 ${
+        className={`fixed inset-0 z-40 lg:hidden scrim transition-opacity duration-200 ${
           sidebarOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
         }`}
-        style={{ background: "rgba(28, 25, 23, 0.5)", backdropFilter: "blur(4px)" }}
         onClick={() => setSidebarOpen(false)}
       />
 
@@ -43,7 +43,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
         className={`fixed inset-y-0 left-0 z-50 w-[260px] flex flex-col lg:translate-x-0 lg:static lg:block`}
         style={{
           background: "var(--surface)",
-          borderRight: "1px solid var(--border)",
+          borderRight: "1px solid var(--line)",
           transform: sidebarOpen ? "translateX(0)" : undefined,
           transition: "transform 250ms var(--ease-drawer)",
           ...(!sidebarOpen ? { transform: "translateX(-100%)" } : {}),
@@ -53,24 +53,24 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
         {/* Logo */}
         <div
           className="h-16 flex items-center justify-between px-5"
-          style={{ borderBottom: "1px solid var(--border)" }}
+          style={{ borderBottom: "1px solid var(--line)" }}
         >
           <Link href="/front-desk" className="flex items-center gap-2.5 no-press" data-no-press>
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-              style={{ background: "linear-gradient(135deg, #019d8e, #067d73)" }}
+              style={{ background: "var(--grad-brand)" }}
             >
               D
             </div>
-            <span className="text-[15px] font-semibold" style={{ color: "var(--foreground)" }}>
+            <span className="text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
               DENTO
-              <span style={{ color: "#019d8e", fontWeight: 400 }}>Continuity</span>
+              <span style={{ color: "var(--brand)", fontWeight: 400 }}>Continuity</span>
             </span>
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}
             className="p-1.5 rounded-md lg:hidden no-press"
-            style={{ color: "var(--text-tertiary)" }}
+            style={{ color: "var(--ink-faint)" }}
             data-no-press
           >
             <X className="w-5 h-5" />
@@ -90,8 +90,8 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
                 className="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium relative no-press"
                 data-no-press
                 style={{
-                  color: isActive ? "#019d8e" : "var(--text-secondary)",
-                  background: isActive ? "rgba(1, 157, 142, 0.08)" : "transparent",
+                  color: isActive ? "var(--brand)" : "var(--ink-muted)",
+                  background: isActive ? "rgb(var(--brand-rgb) / 0.08)" : "transparent",
                   transition:
                     "color 150ms var(--ease-out), background 150ms var(--ease-out)",
                 }}
@@ -99,7 +99,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
                 <item.icon
                   className="w-[18px] h-[18px]"
                   style={{
-                    color: isActive ? "#019d8e" : "var(--text-tertiary)",
+                    color: isActive ? "var(--brand)" : "var(--ink-faint)",
                     transition: "color 150ms var(--ease-out)",
                   }}
                 />
@@ -109,7 +109,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
                   className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-full"
                   style={{
                     height: isActive ? "20px" : "0px",
-                    background: "#019d8e",
+                    background: "var(--brand)",
                     opacity: isActive ? 1 : 0,
                     transition:
                       "height 200ms var(--ease-out), opacity 200ms var(--ease-out)",
@@ -121,7 +121,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
         </nav>
 
         {/* User profile */}
-        <div className="px-3 py-4" style={{ borderTop: "1px solid var(--border)" }}>
+        <div className="px-3 py-4" style={{ borderTop: "1px solid var(--line)" }}>
           <div
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer no-press"
             data-no-press
@@ -131,15 +131,15 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
           >
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs text-white"
-              style={{ background: "linear-gradient(135deg, #019d8e, #0d524d)" }}
+              style={{ background: "var(--grad-brand-deep)" }}
             >
               JS
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-medium truncate" style={{ color: "var(--foreground)" }}>
+              <p className="text-[13px] font-medium truncate" style={{ color: "var(--ink)" }}>
                 Dr. John Smith
               </p>
-              <p className="text-[11px] truncate" style={{ color: "var(--text-tertiary)" }}>
+              <p className="text-[11px] truncate" style={{ color: "var(--ink-faint)" }}>
                 Lead Dentist
               </p>
             </div>
@@ -165,7 +165,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
               onClick={() => setSidebarOpen(true)}
               className="p-2 -ml-2 rounded-lg lg:hidden no-press"
               data-no-press
-              style={{ color: "var(--text-secondary)" }}
+              style={{ color: "var(--ink-muted)" }}
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -177,6 +177,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
           </div>
 
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <NotificationCenter />
           </div>
         </header>

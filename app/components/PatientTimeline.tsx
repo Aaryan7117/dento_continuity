@@ -65,13 +65,13 @@ type PatientTimelineProps = {
 };
 
 const STATUS_COLORS: Record<string, { color: string; bg: string }> = {
-  COMPLETED: { color: "#10b981", bg: "rgba(16, 185, 129, 0.1)" },
-  SCHEDULED: { color: "#0ea5e9", bg: "rgba(14, 165, 233, 0.1)" },
-  CONFIRMED: { color: "#019d8e", bg: "rgba(1, 157, 142, 0.1)" },
-  NO_SHOW: { color: "#ef4444", bg: "rgba(239, 68, 68, 0.1)" },
-  CANCELLED: { color: "#a8a29e", bg: "rgba(168, 162, 158, 0.1)" },
-  PROPOSED: { color: "#0ea5e9", bg: "rgba(14, 165, 233, 0.1)" },
-  ACCEPTED: { color: "#019d8e", bg: "rgba(1, 157, 142, 0.1)" },
+  COMPLETED: { color: "#10b981", bg: "rgb(var(--tone-emerald) / 0.1)" },
+  SCHEDULED: { color: "#0ea5e9", bg: "rgb(var(--tone-sky) / 0.1)" },
+  CONFIRMED: { color: "var(--brand)", bg: "rgb(var(--brand-rgb) / 0.1)" },
+  NO_SHOW: { color: "#ef4444", bg: "rgb(var(--tone-red) / 0.1)" },
+  CANCELLED: { color: "var(--ink-faint)", bg: "rgb(var(--tone-neutral) / 0.1)" },
+  PROPOSED: { color: "#0ea5e9", bg: "rgb(var(--tone-sky) / 0.1)" },
+  ACCEPTED: { color: "var(--brand)", bg: "rgb(var(--brand-rgb) / 0.1)" },
 };
 
 export default function PatientTimeline({
@@ -96,8 +96,8 @@ export default function PatientTimeline({
         date: apt.startsAt,
         title: apt.reason || "Appointment",
         status: apt.status,
-        color: STATUS_COLORS[apt.status]?.color || "#a8a29e",
-        bgColor: STATUS_COLORS[apt.status]?.bg || "rgba(168, 162, 158, 0.1)",
+        color: STATUS_COLORS[apt.status]?.color || "var(--ink-faint)",
+        bgColor: STATUS_COLORS[apt.status]?.bg || "rgb(var(--tone-neutral) / 0.1)",
         icon: Calendar,
         metadata: {
           Time: new Date(apt.startsAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }),
@@ -116,12 +116,12 @@ export default function PatientTimeline({
         description: tp.description || undefined,
         status: tp.status,
         color: STATUS_COLORS[tp.status]?.color || "#0ea5e9",
-        bgColor: STATUS_COLORS[tp.status]?.bg || "rgba(14, 165, 233, 0.1)",
+        bgColor: STATUS_COLORS[tp.status]?.bg || "rgb(var(--tone-sky) / 0.1)",
         icon: FileText,
         metadata: {
           Status: tp.status,
           Billing: tp.billingStatus,
-          ...(tp.estimatedCost != null ? { Cost: `₦${tp.estimatedCost.toLocaleString()}` } : {}),
+          ...(tp.estimatedCost != null ? { Cost: `₹${tp.estimatedCost.toLocaleString("en-IN")}` } : {}),
         },
       });
     }
@@ -135,7 +135,7 @@ export default function PatientTimeline({
         title: `Tooth ${tf.toothCode}: ${tf.finding.replace("_", " ")}`,
         description: tf.note || undefined,
         color: "#f59e0b",
-        bgColor: "rgba(245, 158, 11, 0.1)",
+        bgColor: "rgb(var(--tone-amber) / 0.1)",
         icon: Stethoscope,
         metadata: {
           Surfaces: tf.surfaces.length > 0 ? tf.surfaces.join(", ") : "Whole tooth",
@@ -152,7 +152,7 @@ export default function PatientTimeline({
         title: `${msg.direction === "OUTBOUND" ? "Sent" : "Received"} via ${msg.channel}`,
         description: msg.body.length > 120 ? msg.body.slice(0, 120) + "…" : msg.body,
         color: "#8b5cf6",
-        bgColor: "rgba(139, 92, 246, 0.1)",
+        bgColor: "rgb(var(--tone-violet) / 0.1)",
         icon: MessageSquare,
         metadata: {
           Direction: msg.direction,
@@ -172,10 +172,10 @@ export default function PatientTimeline({
         status: r.completedAt ? "COMPLETED" : isOverdue ? "OVERDUE" : "UPCOMING",
         color: r.completedAt ? "#10b981" : isOverdue ? "#ef4444" : "#f59e0b",
         bgColor: r.completedAt
-          ? "rgba(16, 185, 129, 0.1)"
+          ? "rgb(var(--tone-emerald) / 0.1)"
           : isOverdue
-            ? "rgba(239, 68, 68, 0.1)"
-            : "rgba(245, 158, 11, 0.1)",
+            ? "rgb(var(--tone-red) / 0.1)"
+            : "rgb(var(--tone-amber) / 0.1)",
         icon: r.completedAt ? CheckCircle2 : isOverdue ? AlertTriangle : Clock,
       });
     }
@@ -212,14 +212,14 @@ export default function PatientTimeline({
       <div className="text-center py-16">
         <div
           className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-          style={{ background: "var(--surface-hover)" }}
+          style={{ background: "var(--raised)" }}
         >
-          <Activity className="w-6 h-6" style={{ color: "var(--text-tertiary)" }} />
+          <Activity className="w-6 h-6" style={{ color: "var(--ink-faint)" }} />
         </div>
-        <p className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>
+        <p className="font-semibold text-sm" style={{ color: "var(--ink)" }}>
           No events yet
         </p>
-        <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>
+        <p className="text-xs mt-1" style={{ color: "var(--ink-faint)" }}>
           Appointments, findings, and treatment plans will appear here.
         </p>
       </div>
@@ -229,9 +229,9 @@ export default function PatientTimeline({
   return (
     <div className="space-y-6">
       {/* Summary bar */}
-      <div className="flex items-center gap-4 flex-wrap text-xs" style={{ color: "var(--text-secondary)" }}>
+      <div className="flex items-center gap-4 flex-wrap text-xs" style={{ color: "var(--ink-muted)" }}>
         {[
-          { type: "appointment", label: "Appointments", color: "#019d8e" },
+          { type: "appointment", label: "Appointments", color: "var(--brand)" },
           { type: "finding", label: "Findings", color: "#f59e0b" },
           { type: "treatment", label: "Treatments", color: "#0ea5e9" },
           { type: "message", label: "Messages", color: "#8b5cf6" },
@@ -246,7 +246,7 @@ export default function PatientTimeline({
             </span>
           );
         })}
-        <span className="ml-auto font-medium" style={{ color: "var(--text-tertiary)" }}>
+        <span className="ml-auto font-medium" style={{ color: "var(--ink-faint)" }}>
           {events.length} total events
         </span>
       </div>
@@ -256,17 +256,17 @@ export default function PatientTimeline({
         <div key={group.label}>
           {/* Month heading */}
           <div className="flex items-center gap-3 mb-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>
+            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--ink-faint)" }}>
               {group.label}
             </h3>
-            <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
+            <div className="flex-1 h-px" style={{ background: "var(--line)" }} />
           </div>
 
           <div className="relative pl-6">
             {/* Vertical line */}
             <div
               className="absolute left-[9px] top-2 bottom-2 w-px"
-              style={{ background: "var(--border)" }}
+              style={{ background: "var(--line)" }}
             />
 
             <div className="space-y-3">
@@ -294,14 +294,14 @@ export default function PatientTimeline({
                       className="rounded-xl p-3.5 transition-all duration-150"
                       style={{
                         background: isExpanded ? evt.bgColor : "var(--surface)",
-                        border: `1px solid ${isExpanded ? evt.color + "30" : "var(--border)"}`,
+                        border: `1px solid ${isExpanded ? evt.color + "30" : "var(--line)"}`,
                         transition: "background 180ms var(--ease-out), border-color 180ms var(--ease-out)",
                       }}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>
+                            <span className="font-semibold text-sm" style={{ color: "var(--ink)" }}>
                               {evt.title}
                             </span>
                             {evt.status && (
@@ -313,7 +313,7 @@ export default function PatientTimeline({
                               </span>
                             )}
                           </div>
-                          <span className="text-[11px] mt-1 block" style={{ color: "var(--text-tertiary)" }}>
+                          <span className="text-[11px] mt-1 block" style={{ color: "var(--ink-faint)" }}>
                             {new Date(evt.date).toLocaleDateString(undefined, {
                               weekday: "short",
                               month: "short",
@@ -330,7 +330,7 @@ export default function PatientTimeline({
                         <div
                           className="p-1 rounded-md transition-colors"
                           style={{
-                            color: "var(--text-tertiary)",
+                            color: "var(--ink-faint)",
                           }}
                         >
                           {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -341,15 +341,15 @@ export default function PatientTimeline({
                       {isExpanded && (
                         <div className="mt-3 pt-3 space-y-2" style={{ borderTop: `1px solid ${evt.color}20` }}>
                           {evt.description && (
-                            <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                            <p className="text-xs leading-relaxed" style={{ color: "var(--ink-muted)" }}>
                               {evt.description}
                             </p>
                           )}
                           {evt.metadata && (
                             <div className="flex flex-wrap gap-x-4 gap-y-1">
                               {Object.entries(evt.metadata).map(([k, v]) => (
-                                <span key={k} className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
-                                  <strong style={{ color: "var(--text-secondary)" }}>{k}:</strong> {v}
+                                <span key={k} className="text-[11px]" style={{ color: "var(--ink-faint)" }}>
+                                  <strong style={{ color: "var(--ink-muted)" }}>{k}:</strong> {v}
                                 </span>
                               ))}
                             </div>
@@ -369,10 +369,10 @@ export default function PatientTimeline({
       {hasMore && (
         <button
           onClick={() => setVisibleCount((c) => c + 20)}
-          className="w-full py-3 rounded-xl text-xs font-semibold transition-all hover:bg-stone-100"
+          className="w-full py-3 rounded-xl text-xs font-semibold transition-all hover:bg-raised"
           style={{
-            color: "#019d8e",
-            border: "1px solid var(--border)",
+            color: "var(--brand)",
+            border: "1px solid var(--line)",
             background: "var(--surface)",
           }}
         >

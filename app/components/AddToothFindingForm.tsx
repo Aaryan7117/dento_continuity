@@ -72,7 +72,7 @@ export default function AddToothFindingForm({
       <div className="grid grid-cols-2 gap-3">
         {/* Tooth code */}
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
+          <label className="block text-xs font-medium text-ink-muted mb-1">
             Tooth (FDI)
           </label>
           <input
@@ -81,19 +81,19 @@ export default function AddToothFindingForm({
             max={48}
             value={toothCode}
             onChange={(e) => setToothCode(Number(e.target.value))}
-            className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-line-strong rounded-md px-3 py-1.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand"
           />
         </div>
 
         {/* Finding type */}
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
+          <label className="block text-xs font-medium text-ink-muted mb-1">
             Finding
           </label>
           <select
             value={finding}
             onChange={(e) => setFinding(e.target.value as typeof finding)}
-            className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-line-strong rounded-md px-3 py-1.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand"
           >
             {FINDING_TYPES.map((f) => (
               <option key={f} value={f}>
@@ -107,7 +107,7 @@ export default function AddToothFindingForm({
       {/* Surfaces (only for non-whole-tooth findings) */}
       {!isWholeTooth && (
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
+          <label className="block text-xs font-medium text-ink-muted mb-1">
             Surfaces
           </label>
           <div className="flex gap-2">
@@ -116,8 +116,8 @@ export default function AddToothFindingForm({
                 key={s}
                 className={`flex items-center gap-1 px-2 py-1 rounded text-xs cursor-pointer transition-colors ${
                   surfaces.includes(s)
-                    ? "bg-blue-100 text-blue-700"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    ? "bg-brand/10 text-brand"
+                    : "bg-raised text-ink-muted hover:bg-line"
                 }`}
               >
                 <input
@@ -139,14 +139,14 @@ export default function AddToothFindingForm({
         placeholder="Optional note…"
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full border border-line-strong rounded-md px-3 py-1.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand"
       />
 
       <div className="flex items-center gap-2">
         <button
           type="submit"
           disabled={isPending}
-          className="bg-blue-600 text-white text-sm font-medium py-1.5 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          className="btn-primary text-sm font-medium py-1.5 px-4 rounded-md disabled:opacity-50 transition-colors"
         >
           {isPending ? "Recording…" : "Record Finding"}
         </button>

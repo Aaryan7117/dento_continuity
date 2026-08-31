@@ -64,10 +64,10 @@ export default function ApproveRecommendationCard({
       {/* Patient info */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>
+          <p className="font-semibold text-sm" style={{ color: "var(--ink)" }}>
             {rec.patient.firstName} {rec.patient.lastName}
           </p>
-          <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+          <p className="text-xs" style={{ color: "var(--ink-faint)" }}>
             {rec.patient.phone}
           </p>
         </div>
@@ -75,11 +75,11 @@ export default function ApproveRecommendationCard({
           <span
             className="text-xs font-semibold px-2.5 py-1 rounded-lg"
             style={{
-              background: "rgba(16, 185, 129, 0.1)",
-              color: "#047857",
+              background: "rgb(var(--tone-emerald) / 0.1)",
+              color: "var(--tone-emerald-ink)",
             }}
           >
-            ₦{rec.estimatedValue.toLocaleString()}
+            ₹{rec.estimatedValue.toLocaleString("en-IN")}
           </span>
         )}
       </div>
@@ -88,21 +88,21 @@ export default function ApproveRecommendationCard({
       <div
         className="rounded-xl p-3"
         style={{
-          background: "rgba(245, 158, 11, 0.06)",
-          border: "1px solid rgba(245, 158, 11, 0.15)",
+          background: "rgb(var(--tone-amber) / 0.06)",
+          border: "1px solid rgb(var(--tone-amber) / 0.15)",
         }}
       >
-        <p className="text-[11px] font-semibold uppercase tracking-wide mb-1" style={{ color: "#b45309" }}>
+        <p className="text-[11px] font-semibold uppercase tracking-wide mb-1" style={{ color: "var(--tone-amber-ink)" }}>
           Agent reasoning
         </p>
-        <p className="text-sm leading-relaxed" style={{ color: "#92400e" }}>
+        <p className="text-sm leading-relaxed" style={{ color: "var(--tone-amber-ink)" }}>
           {rec.reason}
         </p>
       </div>
 
       {/* Missed appointment */}
       {rec.missedAppointment && (
-        <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+        <p className="text-xs" style={{ color: "var(--ink-faint)" }}>
           Missed:{" "}
           {new Date(rec.missedAppointment.startsAt).toLocaleString(undefined, {
             dateStyle: "medium",
@@ -116,16 +116,16 @@ export default function ApproveRecommendationCard({
       <div>
         <label
           className="block text-[11px] font-semibold uppercase tracking-wide mb-1.5"
-          style={{ color: "var(--text-secondary)" }}
+          style={{ color: "var(--ink-muted)" }}
         >
           Message to send ({rec.channel})
         </label>
         <textarea
           className="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none resize-none"
           style={{
-            background: "var(--surface-hover)",
-            border: "1px solid var(--border)",
-            color: "var(--foreground)",
+            background: "var(--raised)",
+            border: "1px solid var(--line)",
+            color: "var(--ink)",
             transition: "border-color 150ms var(--ease-out), box-shadow 150ms var(--ease-out)",
           }}
           rows={3}
@@ -133,11 +133,11 @@ export default function ApproveRecommendationCard({
           onChange={(e) => setEditedMessage(e.target.value)}
           disabled={isPending}
           onFocus={(e) => {
-            e.currentTarget.style.borderColor = "#019d8e";
-            e.currentTarget.style.boxShadow = "0 0 0 3px rgba(1, 157, 142, 0.08)";
+            e.currentTarget.style.borderColor = "var(--brand)";
+            e.currentTarget.style.boxShadow = "0 0 0 3px rgb(var(--brand-rgb) / 0.08)";
           }}
           onBlur={(e) => {
-            e.currentTarget.style.borderColor = "var(--border)";
+            e.currentTarget.style.borderColor = "var(--line)";
             e.currentTarget.style.boxShadow = "none";
           }}
         />
@@ -150,7 +150,7 @@ export default function ApproveRecommendationCard({
           disabled={isPending}
           className="flex-1 text-white text-sm font-semibold py-2.5 px-4 rounded-xl disabled:opacity-50"
           style={{
-            background: "linear-gradient(135deg, #019d8e, #067d73)",
+            background: "var(--grad-brand)",
             transition: "opacity 150ms var(--ease-out)",
           }}
         >
@@ -161,9 +161,9 @@ export default function ApproveRecommendationCard({
           disabled={isPending}
           className="px-4 py-2.5 text-sm font-semibold rounded-xl disabled:opacity-50"
           style={{
-            background: "var(--surface-hover)",
-            color: "var(--text-secondary)",
-            border: "1px solid var(--border)",
+            background: "var(--raised)",
+            color: "var(--ink-muted)",
+            border: "1px solid var(--line)",
             transition: "background 150ms var(--ease-out)",
           }}
         >

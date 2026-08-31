@@ -7,11 +7,11 @@ import StatusBadge from "./StatusBadge";
 import { ChevronDown, Check, CheckCircle2, UserX, XCircle, Clock, Loader2 } from "lucide-react";
 
 const STATUS_OPTIONS: { status: "SCHEDULED" | "CONFIRMED" | "COMPLETED" | "NO_SHOW" | "CANCELLED"; label: string; icon: any; color: string }[] = [
-  { status: "SCHEDULED", label: "Scheduled", icon: Clock, color: "text-sky-600" },
-  { status: "CONFIRMED", label: "Confirm Visit", icon: Check, color: "text-indigo-600" },
+  { status: "SCHEDULED", label: "Scheduled", icon: Clock, color: "text-status-scheduled" },
+  { status: "CONFIRMED", label: "Confirm Visit", icon: Check, color: "text-status-confirmed" },
   { status: "COMPLETED", label: "Mark Completed", icon: CheckCircle2, color: "text-emerald-600" },
   { status: "NO_SHOW", label: "Flag No-Show (Agent)", icon: UserX, color: "text-red-600" },
-  { status: "CANCELLED", label: "Cancel Appointment", icon: XCircle, color: "text-stone-500" },
+  { status: "CANCELLED", label: "Cancel Appointment", icon: XCircle, color: "text-ink-muted" },
 ];
 
 export default function AppointmentRowActions({
@@ -89,30 +89,30 @@ export default function AppointmentRowActions({
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={isPending}
-        className="inline-flex items-center gap-1 group py-0.5 px-1 rounded-lg hover:bg-stone-100/80 transition-colors cursor-pointer"
+        className="inline-flex items-center gap-1 group py-0.5 px-1 rounded-lg hover:bg-raised/80 transition-colors cursor-pointer"
         title="Click to change appointment status"
       >
         {isPending ? (
-          <span className="inline-flex items-center gap-1 text-xs text-stone-500 font-medium px-2 py-0.5">
-            <Loader2 className="w-3 h-3 animate-spin text-[#019d8e]" /> Updating…
+          <span className="inline-flex items-center gap-1 text-xs text-ink-muted font-medium px-2 py-0.5">
+            <Loader2 className="w-3 h-3 animate-spin text-brand" /> Updating…
           </span>
         ) : (
           <>
             <StatusBadge status={currentStatus} />
-            <ChevronDown className="w-3 h-3 text-stone-400 group-hover:text-stone-700 transition-transform group-hover:translate-y-0.5" />
+            <ChevronDown className="w-3 h-3 text-ink-faint group-hover:text-ink transition-transform group-hover:translate-y-0.5" />
           </>
         )}
       </button>
 
       {isOpen && (
         <div
-          className="absolute right-0 sm:left-0 top-full mt-1.5 w-48 rounded-xl shadow-xl z-50 overflow-hidden border border-stone-200/80 py-1"
+          className="absolute right-0 sm:left-0 top-full mt-1.5 w-48 rounded-xl shadow-xl z-50 overflow-hidden border border-line py-1"
           style={{
             background: "var(--surface)",
             backdropFilter: "blur(20px)",
           }}
         >
-          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-stone-400 border-b border-stone-100">
+          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-faint border-b border-line">
             Change Status
           </div>
           {STATUS_OPTIONS.map((opt) => {
@@ -124,15 +124,15 @@ export default function AppointmentRowActions({
                 onClick={() => handleSelectStatus(opt.status)}
                 className={`w-full text-left px-3 py-2 text-xs font-semibold flex items-center justify-between transition-colors ${
                   isCurrent
-                    ? "bg-[#019d8e]/10 text-[#019d8e]"
-                    : "hover:bg-stone-50 text-stone-700"
+                    ? "bg-brand/10 text-brand"
+                    : "hover:bg-canvas text-ink"
                 }`}
               >
                 <div className="flex items-center gap-2">
                   <Icon className={`w-3.5 h-3.5 ${opt.color}`} />
                   <span>{opt.label}</span>
                 </div>
-                {isCurrent && <Check className="w-3.5 h-3.5 text-[#019d8e]" />}
+                {isCurrent && <Check className="w-3.5 h-3.5 text-brand" />}
               </button>
             );
           })}

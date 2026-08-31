@@ -27,7 +27,7 @@ export default function AddNoteForm({ encounterId }: { encounterId: string }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-2">
       <textarea
-        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+        className="w-full border border-line-strong rounded-md px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand resize-none"
         rows={3}
         placeholder="Add a clinical note…"
         value={body}
@@ -38,7 +38,7 @@ export default function AddNoteForm({ encounterId }: { encounterId: string }) {
         <button
           type="submit"
           disabled={isPending || !body.trim()}
-          className="bg-blue-600 text-white text-sm font-medium py-1.5 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          className="btn-primary text-sm font-medium py-1.5 px-4 rounded-md disabled:opacity-50 transition-colors"
         >
           {isPending ? "Saving…" : "Add Note"}
         </button>
@@ -69,7 +69,7 @@ export function SignNoteButton({
     <button
       onClick={() => startTransition(async () => { await signNote({ id: noteId }); })}
       disabled={isPending}
-      className="text-xs text-blue-600 hover:text-blue-800 font-medium disabled:opacity-50"
+      className="text-xs text-brand hover:underline font-medium disabled:opacity-50"
     >
       {isPending ? "Signing…" : "Sign"}
     </button>

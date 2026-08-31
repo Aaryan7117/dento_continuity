@@ -49,35 +49,35 @@ export default async function PatientChartPage({
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-2xl text-white shrink-0"
             style={{
-              background: "linear-gradient(135deg, #019d8e, #0d524d)",
-              boxShadow: "0 4px 12px rgba(1, 157, 142, 0.25)",
+              background: "var(--grad-brand-deep)",
+              boxShadow: "0 4px 12px rgb(var(--brand-rgb) / 0.25)",
             }}
           >
             {patient.firstName[0]}
             {patient.lastName[0]}
           </div>
           <div>
-            <h1 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>
+            <h1 className="text-2xl font-bold" style={{ color: "var(--ink)" }}>
               {patient.firstName} {patient.lastName}
             </h1>
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-2 text-[13px]" style={{ color: "var(--text-secondary)" }}>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-2 text-[13px]" style={{ color: "var(--ink-muted)" }}>
               <span className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5" style={{ color: "var(--text-tertiary)" }} />
+                <Calendar className="w-3.5 h-3.5" style={{ color: "var(--ink-faint)" }} />
                 {patient.dateOfBirth}
               </span>
               <span className="flex items-center gap-1.5">
-                <Phone className="w-3.5 h-3.5" style={{ color: "var(--text-tertiary)" }} />
+                <Phone className="w-3.5 h-3.5" style={{ color: "var(--ink-faint)" }} />
                 {patient.phone}
               </span>
               {patient.email && (
                 <span className="flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5" style={{ color: "var(--text-tertiary)" }} />
+                  <Mail className="w-3.5 h-3.5" style={{ color: "var(--ink-faint)" }} />
                   {patient.email}
                 </span>
               )}
               {patient.address && (
                 <span className="flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5" style={{ color: "var(--text-tertiary)" }} />
+                  <MapPin className="w-3.5 h-3.5" style={{ color: "var(--ink-faint)" }} />
                   {patient.address}
                 </span>
               )}
@@ -89,13 +89,13 @@ export default async function PatientChartPage({
             className="flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold"
             style={{
               background: patient.consentGiven
-                ? "rgba(16, 185, 129, 0.08)"
-                : "rgba(239, 68, 68, 0.08)",
-              color: patient.consentGiven ? "#047857" : "#b91c1c",
+                ? "rgb(var(--tone-emerald) / 0.08)"
+                : "rgb(var(--tone-red) / 0.08)",
+              color: patient.consentGiven ? "var(--tone-emerald-ink)" : "var(--tone-red-ink)",
               border: `1px solid ${
                 patient.consentGiven
-                  ? "rgba(16, 185, 129, 0.15)"
-                  : "rgba(239, 68, 68, 0.15)"
+                  ? "rgb(var(--tone-emerald) / 0.15)"
+                  : "rgb(var(--tone-red) / 0.15)"
               }`,
             }}
             data-no-press
@@ -112,7 +112,7 @@ export default async function PatientChartPage({
             href={`/patients/${id}/encounters/new`}
             className="flex items-center justify-center gap-1.5 text-white text-sm font-semibold py-2.5 px-5 rounded-xl"
             style={{
-              background: "linear-gradient(135deg, #019d8e, #067d73)",
+              background: "var(--grad-brand)",
               transition: "opacity 150ms var(--ease-out)",
             }}
           >

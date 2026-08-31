@@ -48,3 +48,6 @@ next-env.d.ts
 
 # locally stored patient images — demo storage, never commit
 /public/uploads/
+
+# IDE and agent local settings
+.claude/

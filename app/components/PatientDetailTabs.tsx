@@ -38,14 +38,14 @@ export default function PatientDetailTabs({
       {/* Tab Bar */}
       <div
         className="flex items-center rounded-xl p-1 gap-0.5 w-fit"
-        style={{ background: "var(--surface-hover)", border: "1px solid var(--border)" }}
+        style={{ background: "var(--raised)", border: "1px solid var(--line)" }}
       >
         <button
           onClick={() => setActiveTab("chart")}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
             activeTab === "chart"
-              ? "bg-white shadow-sm text-[#019d8e]"
-              : "text-stone-500 hover:text-stone-800"
+              ? "bg-surface shadow-sm text-brand"
+              : "text-ink-muted hover:text-ink"
           }`}
         >
           <Activity className="w-3.5 h-3.5" />
@@ -55,8 +55,8 @@ export default function PatientDetailTabs({
           onClick={() => setActiveTab("timeline")}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
             activeTab === "timeline"
-              ? "bg-white shadow-sm text-[#8b5cf6]"
-              : "text-stone-500 hover:text-stone-800"
+              ? "bg-surface shadow-sm text-[#8b5cf6]"
+              : "text-ink-muted hover:text-ink"
           }`}
         >
           <GitBranch className="w-3.5 h-3.5" />
@@ -71,10 +71,10 @@ export default function PatientDetailTabs({
           <div className="lg:col-span-2 space-y-6">
             {/* Odontogram */}
             <div className="card p-6 stagger-item">
-              <h2 className="text-lg font-bold mb-4" style={{ color: "var(--foreground)" }}>
+              <h2 className="text-lg font-bold mb-4" style={{ color: "var(--ink)" }}>
                 Clinical Charting
               </h2>
-              <div className="rounded-xl p-4" style={{ background: "var(--surface-hover)", border: "1px solid var(--border)" }}>
+              <div className="rounded-xl p-4" style={{ background: "var(--raised)", border: "1px solid var(--line)" }}>
                 <OdontogramChart findings={patient.toothFindings} />
               </div>
             </div>
@@ -82,8 +82,8 @@ export default function PatientDetailTabs({
             {/* Treatment Plans */}
             <div className="card p-6 stagger-item">
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: "var(--foreground)" }}>
-                  <FileText className="w-5 h-5" style={{ color: "var(--text-tertiary)" }} />
+                <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: "var(--ink)" }}>
+                  <FileText className="w-5 h-5" style={{ color: "var(--ink-faint)" }} />
                   Treatment Plans
                 </h2>
                 <Link
@@ -91,8 +91,8 @@ export default function PatientDetailTabs({
                   className="flex items-center gap-1 text-[13px] font-semibold px-3 py-1.5 rounded-lg no-press"
                   data-no-press
                   style={{
-                    color: "#019d8e",
-                    background: "rgba(1, 157, 142, 0.08)",
+                    color: "var(--brand)",
+                    background: "rgb(var(--brand-rgb) / 0.08)",
                     transition: "background 150ms var(--ease-out)",
                   }}
                 >
@@ -104,12 +104,12 @@ export default function PatientDetailTabs({
                 <div
                   className="text-center py-8 rounded-xl"
                   style={{
-                    background: "var(--surface-hover)",
-                    border: "1px dashed var(--border-strong)",
+                    background: "var(--raised)",
+                    border: "1px dashed var(--line-strong)",
                   }}
                 >
-                  <FileText className="w-7 h-7 mx-auto mb-2" style={{ color: "var(--text-tertiary)" }} />
-                  <p className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
+                  <FileText className="w-7 h-7 mx-auto mb-2" style={{ color: "var(--ink-faint)" }} />
+                  <p className="text-sm font-medium" style={{ color: "var(--ink-muted)" }}>
                     No treatment plans yet
                   </p>
                 </div>
@@ -120,25 +120,25 @@ export default function PatientDetailTabs({
                       key={tp.id}
                       className="group rounded-xl p-4 stagger-item"
                       style={{
-                        border: "1px solid var(--border)",
+                        border: "1px solid var(--line)",
                         transition: "border-color 150ms var(--ease-out), box-shadow 150ms var(--ease-out)",
                       }}
                     >
                       <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2.5 flex-wrap">
-                            <h3 className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>
+                            <h3 className="font-semibold text-sm" style={{ color: "var(--ink)" }}>
                               {tp.title}
                             </h3>
                             <StatusBadge status={tp.status} />
                             <StatusBadge status={tp.billingStatus} />
                           </div>
                           {tp.description && (
-                            <p className="text-sm mt-2 line-clamp-2" style={{ color: "var(--text-secondary)" }}>
+                            <p className="text-sm mt-2 line-clamp-2" style={{ color: "var(--ink-muted)" }}>
                               {tp.description}
                             </p>
                           )}
-                          <div className="flex items-center gap-3 mt-3 text-xs" style={{ color: "var(--text-tertiary)" }}>
+                          <div className="flex items-center gap-3 mt-3 text-xs" style={{ color: "var(--ink-faint)" }}>
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
                               {new Date(tp.proposedAt).toLocaleDateString()}
@@ -147,11 +147,11 @@ export default function PatientDetailTabs({
                               <span
                                 className="font-semibold px-2 py-0.5 rounded-md"
                                 style={{
-                                  background: "var(--surface-hover)",
-                                  color: "var(--foreground)",
+                                  background: "var(--raised)",
+                                  color: "var(--ink)",
                                 }}
                               >
-                                ₦{tp.estimatedCost.toLocaleString()}
+                                ₹{tp.estimatedCost.toLocaleString("en-IN")}
                               </span>
                             )}
                           </div>
@@ -171,12 +171,12 @@ export default function PatientDetailTabs({
             <div className="card p-5 stagger-item">
               <h2
                 className="text-[11px] font-bold uppercase tracking-wider mb-4 flex items-center gap-1.5"
-                style={{ color: "#019d8e" }}
+                style={{ color: "var(--brand)" }}
               >
                 <Clock className="w-3.5 h-3.5" /> Upcoming
               </h2>
               {upcomingAppointments.length === 0 && patient.recalls.length === 0 ? (
-                <p className="text-sm italic" style={{ color: "var(--text-tertiary)" }}>
+                <p className="text-sm italic" style={{ color: "var(--ink-faint)" }}>
                   No upcoming events.
                 </p>
               ) : (
@@ -185,27 +185,27 @@ export default function PatientDetailTabs({
                     <div
                       key={apt.id}
                       className="relative pl-5 stagger-item"
-                      style={{ borderLeft: "2px solid rgba(1, 157, 142, 0.2)" }}
+                      style={{ borderLeft: "2px solid rgb(var(--brand-rgb) / 0.2)" }}
                     >
                       <div
                         className="absolute left-[-5px] top-[6px] w-2 h-2 rounded-full"
-                        style={{ background: "#019d8e", boxShadow: "0 0 0 3px rgba(1, 157, 142, 0.1)" }}
+                        style={{ background: "var(--brand)", boxShadow: "0 0 0 3px rgb(var(--brand-rgb) / 0.1)" }}
                       />
                       <div
                         className="rounded-lg p-3"
-                        style={{ background: "rgba(1, 157, 142, 0.04)", border: "1px solid rgba(1, 157, 142, 0.1)" }}
+                        style={{ background: "rgb(var(--brand-rgb) / 0.04)", border: "1px solid rgb(var(--brand-rgb) / 0.1)" }}
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+                          <span className="text-sm font-semibold" style={{ color: "var(--ink)" }}>
                             {new Date(apt.startsAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                           </span>
                           <StatusBadge status={apt.status} />
                         </div>
-                        <span className="text-xs" style={{ color: "#019d8e" }}>
+                        <span className="text-xs" style={{ color: "var(--brand)" }}>
                           {new Date(apt.startsAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
                         </span>
                         {apt.reason && (
-                          <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
+                          <p className="text-xs mt-1" style={{ color: "var(--ink-muted)" }}>
                             {apt.reason}
                           </p>
                         )}
@@ -217,34 +217,34 @@ export default function PatientDetailTabs({
                     <div
                       key={r.id}
                       className="relative pl-5 stagger-item"
-                      style={{ borderLeft: "2px solid rgba(245, 158, 11, 0.2)" }}
+                      style={{ borderLeft: "2px solid rgb(var(--tone-amber) / 0.2)" }}
                     >
                       <div
                         className="absolute left-[-5px] top-[6px] w-2 h-2 rounded-full"
-                        style={{ background: "#f59e0b", boxShadow: "0 0 0 3px rgba(245, 158, 11, 0.1)" }}
+                        style={{ background: "#f59e0b", boxShadow: "0 0 0 3px rgb(var(--tone-amber) / 0.1)" }}
                       />
                       <div
                         className="rounded-lg p-3"
-                        style={{ background: "rgba(245, 158, 11, 0.04)", border: "1px solid rgba(245, 158, 11, 0.1)" }}
+                        style={{ background: "rgb(var(--tone-amber) / 0.04)", border: "1px solid rgb(var(--tone-amber) / 0.1)" }}
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+                          <span className="text-sm font-semibold" style={{ color: "var(--ink)" }}>
                             Recall Due
                           </span>
                           <span
                             className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
                             style={{
-                              background: new Date(r.dueAt) < new Date() ? "rgba(239, 68, 68, 0.1)" : "rgba(245, 158, 11, 0.1)",
-                              color: new Date(r.dueAt) < new Date() ? "#b91c1c" : "#b45309",
+                              background: new Date(r.dueAt) < new Date() ? "rgb(var(--tone-red) / 0.1)" : "rgb(var(--tone-amber) / 0.1)",
+                              color: new Date(r.dueAt) < new Date() ? "var(--tone-red-ink)" : "var(--tone-amber-ink)",
                             }}
                           >
                             {new Date(r.dueAt) < new Date() ? "Overdue" : "Upcoming"}
                           </span>
                         </div>
-                        <span className="text-xs" style={{ color: "#d97706" }}>
+                        <span className="text-xs" style={{ color: "#f59e0b" }}>
                           {new Date(r.dueAt).toLocaleDateString()}
                         </span>
-                        <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
+                        <p className="text-xs mt-1" style={{ color: "var(--ink-muted)" }}>
                           {r.reason ?? "Scheduled recall"}
                         </p>
                       </div>
@@ -258,12 +258,12 @@ export default function PatientDetailTabs({
             <div className="card p-5 stagger-item">
               <h2
                 className="text-[11px] font-bold uppercase tracking-wider mb-4 flex items-center gap-1.5"
-                style={{ color: "var(--text-tertiary)" }}
+                style={{ color: "var(--ink-faint)" }}
               >
                 <Clock className="w-3.5 h-3.5" /> Visit History
               </h2>
               {pastAppointments.length === 0 ? (
-                <p className="text-sm italic" style={{ color: "var(--text-tertiary)" }}>
+                <p className="text-sm italic" style={{ color: "var(--ink-faint)" }}>
                   No past visits.
                 </p>
               ) : (
@@ -274,20 +274,20 @@ export default function PatientDetailTabs({
                       className="relative pl-5 stagger-item"
                       style={{
                         borderLeft: `2px solid ${
-                          apt.status === "NO_SHOW" ? "rgba(239, 68, 68, 0.2)" : "var(--border)"
+                          apt.status === "NO_SHOW" ? "rgb(var(--tone-red) / 0.2)" : "var(--line)"
                         }`,
                       }}
                     >
                       <div
                         className="absolute left-[-5px] top-[6px] w-2 h-2 rounded-full"
-                        style={{ background: apt.status === "NO_SHOW" ? "#ef4444" : "var(--text-tertiary)" }}
+                        style={{ background: apt.status === "NO_SHOW" ? "#ef4444" : "var(--ink-faint)" }}
                       />
                       <div
                         className="rounded-lg p-3"
-                        style={{ background: "var(--surface-hover)", border: "1px solid var(--border)" }}
+                        style={{ background: "var(--raised)", border: "1px solid var(--line)" }}
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+                          <span className="text-sm font-medium" style={{ color: "var(--ink)" }}>
                             {new Date(apt.startsAt).toLocaleDateString(undefined, {
                               month: "short",
                               day: "numeric",
@@ -297,7 +297,7 @@ export default function PatientDetailTabs({
                           <StatusBadge status={apt.status} />
                         </div>
                         {apt.reason && (
-                          <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
+                          <p className="text-xs mt-1" style={{ color: "var(--ink-muted)" }}>
                             {apt.reason}
                           </p>
                         )}

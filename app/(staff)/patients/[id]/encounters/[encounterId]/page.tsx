@@ -23,23 +23,23 @@ export default async function EncounterDetailPage({
         <div>
           <Link
             href={`/patients/${patientId}`}
-            className="text-sm text-blue-600 hover:underline"
+            className="text-sm text-brand hover:underline"
           >
             ← Back to chart
           </Link>
-          <h1 className="text-xl font-semibold text-gray-900 mt-1">
+          <h1 className="text-xl font-semibold text-ink mt-1">
             Encounter —{" "}
             {new Date(encounter.occurredAt).toLocaleDateString(undefined, {
               dateStyle: "medium",
             })}
           </h1>
           {encounter.provider && (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-ink-muted">
               Provider: {encounter.provider.name}
             </p>
           )}
           {encounter.summary && (
-            <p className="text-sm text-gray-600 mt-1">{encounter.summary}</p>
+            <p className="text-sm text-ink-muted mt-1">{encounter.summary}</p>
           )}
         </div>
       </div>
@@ -47,7 +47,7 @@ export default async function EncounterDetailPage({
       <div className="grid grid-cols-2 gap-6">
         {/* Left: Notes */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-ink">
             Clinical Notes
           </h2>
 
@@ -57,14 +57,14 @@ export default async function EncounterDetailPage({
               {encounter.notes.map((note) => (
                 <div
                   key={note.id}
-                  className={`bg-white border rounded-lg p-3 ${
+                  className={`bg-surface border rounded-lg p-3 ${
                     note.signed
-                      ? "border-green-200"
-                      : "border-gray-200"
+                      ? "border-green-500/25"
+                      : "border-line"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-ink-muted">
                       {new Date(note.createdAt).toLocaleString(undefined, {
                         dateStyle: "short",
                         timeStyle: "short",
@@ -72,7 +72,7 @@ export default async function EncounterDetailPage({
                     </span>
                     <SignNoteButton noteId={note.id} signed={note.signed} />
                   </div>
-                  <p className="text-sm text-gray-800 whitespace-pre-wrap">
+                  <p className="text-sm text-ink whitespace-pre-wrap">
                     {note.body}
                   </p>
                   {note.signedAt && (
@@ -89,8 +89,8 @@ export default async function EncounterDetailPage({
           )}
 
           {/* Add note form */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">
+          <div className="bg-canvas border border-line rounded-lg p-3">
+            <h3 className="text-sm font-medium text-ink mb-2">
               Add Note
             </h3>
             <AddNoteForm encounterId={encounterId} />
@@ -99,7 +99,7 @@ export default async function EncounterDetailPage({
 
         {/* Right: Findings + Images */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-ink">
             Tooth Findings
           </h2>
 
@@ -109,21 +109,21 @@ export default async function EncounterDetailPage({
               {encounter.toothFindings.map((tf) => (
                 <div
                   key={tf.id}
-                  className="bg-white border border-gray-200 rounded-lg p-3"
+                  className="bg-surface border border-line rounded-lg p-3"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-mono font-medium text-gray-900">
+                    <span className="text-sm font-mono font-medium text-ink">
                       #{tf.toothCode}
                     </span>
                     <StatusBadge status={tf.finding} />
                     {tf.surfaces.length > 0 && (
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-ink-muted">
                         {tf.surfaces.join(", ")}
                       </span>
                     )}
                   </div>
                   {tf.note && (
-                    <p className="text-xs text-gray-600 mt-1">{tf.note}</p>
+                    <p className="text-xs text-ink-muted mt-1">{tf.note}</p>
                   )}
                 </div>
               ))}
@@ -131,8 +131,8 @@ export default async function EncounterDetailPage({
           )}
 
           {/* Add finding form */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">
+          <div className="bg-canvas border border-line rounded-lg p-3">
+            <h3 className="text-sm font-medium text-ink mb-2">
               Record Finding
             </h3>
             <AddToothFindingForm
@@ -143,14 +143,14 @@ export default async function EncounterDetailPage({
 
           {encounter.images.length > 0 && (
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">
+              <h2 className="text-lg font-semibold text-ink mb-2">
                 Images
               </h2>
               <div className="grid grid-cols-2 gap-2">
                 {encounter.images.map((img) => (
                   <div
                     key={img.id}
-                    className="bg-white border border-gray-200 rounded-lg overflow-hidden"
+                    className="bg-surface border border-line rounded-lg overflow-hidden"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -159,11 +159,11 @@ export default async function EncounterDetailPage({
                       className="w-full h-32 object-cover"
                     />
                     <div className="p-2">
-                      <p className="text-xs text-gray-600 truncate">
+                      <p className="text-xs text-ink-muted truncate">
                         {img.caption ?? img.kind}
                       </p>
                       {img.capturedAt && (
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-ink-faint">
                           {new Date(img.capturedAt).toLocaleDateString()}
                         </p>
                       )}

@@ -76,7 +76,7 @@ export default function PatientDirectoryClient({
   }, [balances, search]);
 
   const tabs: { key: ViewTab; label: string; count: number; icon: typeof Users; color: string }[] = [
-    { key: "directory", label: "Patients", count: initialPatients.length, icon: Users, color: "#019d8e" },
+    { key: "directory", label: "Patients", count: initialPatients.length, icon: Users, color: "var(--brand)" },
     { key: "recalls", label: "Recalls Due", count: recalls.length, icon: RefreshCcw, color: "#f59e0b" },
     { key: "balances", label: "Balances", count: balances.length, icon: Wallet, color: "#ef4444" },
   ];
@@ -86,10 +86,10 @@ export default function PatientDirectoryClient({
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>
+          <h1 className="text-2xl font-bold" style={{ color: "var(--ink)" }}>
             Patient Directory
           </h1>
-          <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
+          <p className="text-sm mt-1" style={{ color: "var(--ink-muted)" }}>
             {activeTab === "directory"
               ? `Showing ${filteredPatients.length} of ${initialPatients.length} registered patient${initialPatients.length !== 1 ? "s" : ""}`
               : activeTab === "recalls"
@@ -100,7 +100,7 @@ export default function PatientDirectoryClient({
         <Link
           href="/patients/new"
           className="flex items-center justify-center gap-1.5 px-4 py-2 text-white rounded-xl text-sm font-semibold w-full sm:w-auto shadow-sm hover:opacity-95 transition-opacity"
-          style={{ background: "linear-gradient(135deg, #019d8e, #067d73)" }}
+          style={{ background: "var(--grad-brand)" }}
         >
           <UserPlus className="w-4 h-4" />
           New Patient
@@ -110,7 +110,7 @@ export default function PatientDirectoryClient({
       {/* Tab Bar */}
       <div
         className="flex items-center rounded-xl p-1 gap-0.5"
-        style={{ background: "var(--surface-hover)", border: "1px solid var(--border)" }}
+        style={{ background: "var(--raised)", border: "1px solid var(--line)" }}
       >
         {tabs.map((tab) => (
           <button
@@ -118,8 +118,8 @@ export default function PatientDirectoryClient({
             onClick={() => setActiveTab(tab.key)}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
               activeTab === tab.key
-                ? "bg-white shadow-sm"
-                : "text-stone-500 hover:text-stone-800"
+                ? "bg-surface shadow-sm"
+                : "text-ink-muted hover:text-ink"
             }`}
             style={activeTab === tab.key ? { color: tab.color } : undefined}
           >
@@ -129,7 +129,7 @@ export default function PatientDirectoryClient({
               className="ml-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold"
               style={{
                 background: activeTab === tab.key ? `${tab.color}15` : "var(--surface)",
-                color: activeTab === tab.key ? tab.color : "var(--text-tertiary)",
+                color: activeTab === tab.key ? tab.color : "var(--ink-faint)",
               }}
             >
               {tab.count}
@@ -143,7 +143,7 @@ export default function PatientDirectoryClient({
         {/* Search Input */}
         <div className="relative flex-1">
           <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-            <Search className="h-4 w-4" style={{ color: "var(--text-tertiary)" }} />
+            <Search className="h-4 w-4" style={{ color: "var(--ink-faint)" }} />
           </div>
           <input
             type="text"
@@ -156,17 +156,17 @@ export default function PatientDirectoryClient({
                   ? "Search recalls by patient name or reason…"
                   : "Search by patient name or treatment plan…"
             }
-            className="block w-full pl-10 pr-10 py-2.5 rounded-xl text-sm outline-none transition-all duration-150 focus:border-[#019d8e] focus:ring-3 focus:ring-[#019d8e]/10"
+            className="block w-full pl-10 pr-10 py-2.5 rounded-xl text-sm outline-none transition-all duration-150 focus:border-brand focus:ring-3 focus:ring-brand/10"
             style={{
               background: "var(--surface)",
-              border: "1px solid var(--border)",
-              color: "var(--foreground)",
+              border: "1px solid var(--line)",
+              color: "var(--ink)",
             }}
           />
           {search && (
             <button
               onClick={() => setSearch("")}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-400 hover:text-stone-600"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-ink-faint hover:text-ink-muted"
             >
               <X className="w-4 h-4" />
             </button>
@@ -178,12 +178,12 @@ export default function PatientDirectoryClient({
           <>
             <div
               className="flex items-center rounded-xl p-1 shrink-0"
-              style={{ background: "var(--surface-hover)", border: "1px solid var(--border)" }}
+              style={{ background: "var(--raised)", border: "1px solid var(--line)" }}
             >
               <button
                 onClick={() => setFilterStatus("ALL")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  filterStatus === "ALL" ? "bg-white text-stone-900 shadow-sm" : "text-stone-500 hover:text-stone-800"
+                  filterStatus === "ALL" ? "bg-surface text-ink shadow-sm" : "text-ink-muted hover:text-ink"
                 }`}
               >
                 All ({initialPatients.length})
@@ -191,7 +191,7 @@ export default function PatientDirectoryClient({
               <button
                 onClick={() => setFilterStatus("ACTIVE")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${
-                  filterStatus === "ACTIVE" ? "bg-white text-emerald-700 shadow-sm" : "text-stone-500 hover:text-stone-800"
+                  filterStatus === "ACTIVE" ? "bg-surface text-emerald-700 shadow-sm" : "text-ink-muted hover:text-ink"
                 }`}
               >
                 <CheckCircle2 className="w-3 h-3 text-emerald-500" />
@@ -200,7 +200,7 @@ export default function PatientDirectoryClient({
               <button
                 onClick={() => setFilterStatus("PENDING")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${
-                  filterStatus === "PENDING" ? "bg-white text-amber-700 shadow-sm" : "text-stone-500 hover:text-stone-800"
+                  filterStatus === "PENDING" ? "bg-surface text-amber-700 shadow-sm" : "text-ink-muted hover:text-ink"
                 }`}
               >
                 <AlertCircle className="w-3 h-3 text-amber-500" />
@@ -210,13 +210,13 @@ export default function PatientDirectoryClient({
 
             <div
               className="flex items-center px-3 py-2 rounded-xl text-xs font-semibold shrink-0 gap-2"
-              style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+              style={{ background: "var(--surface)", border: "1px solid var(--line)" }}
             >
-              <ArrowUpDown className="w-3.5 h-3.5 text-stone-400" />
+              <ArrowUpDown className="w-3.5 h-3.5 text-ink-faint" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="bg-transparent outline-none cursor-pointer text-stone-700"
+                className="bg-transparent outline-none cursor-pointer text-ink"
               >
                 <option value="name-asc">Name (A → Z)</option>
                 <option value="name-desc">Name (Z → A)</option>
@@ -233,12 +233,12 @@ export default function PatientDirectoryClient({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Patient</th>
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Contact</th>
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-stone-400 hidden md:table-cell">Date of Birth</th>
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-stone-400 hidden sm:table-cell">Status</th>
-                  <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-stone-400">Actions</th>
+                <tr style={{ borderBottom: "1px solid var(--line)" }}>
+                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Patient</th>
+                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Contact</th>
+                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-ink-faint hidden md:table-cell">Date of Birth</th>
+                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-ink-faint hidden sm:table-cell">Status</th>
+                  <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -246,19 +246,19 @@ export default function PatientDirectoryClient({
                   <tr>
                     <td colSpan={5} className="px-5 py-14 text-center">
                       <div className="flex flex-col items-center">
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3" style={{ background: "var(--surface-hover)" }}>
-                          <Users className="w-5 h-5 text-stone-400" />
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3" style={{ background: "var(--raised)" }}>
+                          <Users className="w-5 h-5 text-ink-faint" />
                         </div>
-                        <p className="font-semibold text-sm text-stone-900">
+                        <p className="font-semibold text-sm text-ink">
                           {search ? `No patients matching "${search}"` : "No patients in this view"}
                         </p>
-                        <p className="text-xs mt-1 text-stone-400">
+                        <p className="text-xs mt-1 text-ink-faint">
                           {search ? "Try clearing your search or checking for spelling errors." : "Change your filter selection to view more patients."}
                         </p>
                         {search && (
                           <button
                             onClick={() => { setSearch(""); setFilterStatus("ALL"); }}
-                            className="mt-3 px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-lg transition-colors"
+                            className="mt-3 px-3 py-1.5 bg-raised hover:bg-line text-ink text-xs font-semibold rounded-lg transition-colors"
                           >
                             Clear search & filters
                           </button>
@@ -268,44 +268,44 @@ export default function PatientDirectoryClient({
                   </tr>
                 ) : (
                   filteredPatients.map((patient) => (
-                    <tr key={patient.id} className="stagger-row group hover:bg-stone-50/70 transition-colors" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <tr key={patient.id} className="stagger-row group hover:bg-canvas/70 transition-colors" style={{ borderBottom: "1px solid var(--line)" }}>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs text-white shrink-0" style={{ background: "linear-gradient(135deg, #019d8e, #0d524d)" }}>
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs text-white shrink-0" style={{ background: "var(--grad-brand-deep)" }}>
                             {patient.firstName[0]}{patient.lastName[0]}
                           </div>
                           <div>
-                            <Link href={`/patients/${patient.id}`} className="font-semibold text-sm text-stone-900 hover:text-[#019d8e] transition-colors">
+                            <Link href={`/patients/${patient.id}`} className="font-semibold text-sm text-ink hover:text-brand transition-colors">
                               {patient.firstName} {patient.lastName}
                             </Link>
                             {patient.address && (
-                              <span className="text-[11px] text-stone-400 block truncate max-w-xs">{patient.address}</span>
+                              <span className="text-[11px] text-ink-faint block truncate max-w-xs">{patient.address}</span>
                             )}
                           </div>
                         </div>
                       </td>
                       <td className="px-5 py-4">
-                        <div className="text-sm font-medium text-stone-900">{patient.phone}</div>
-                        {patient.email && <div className="text-xs mt-0.5 text-stone-400 hidden md:block">{patient.email}</div>}
+                        <div className="text-sm font-medium text-ink">{patient.phone}</div>
+                        {patient.email && <div className="text-xs mt-0.5 text-ink-faint hidden md:block">{patient.email}</div>}
                       </td>
-                      <td className="px-5 py-4 hidden md:table-cell text-stone-600">
+                      <td className="px-5 py-4 hidden md:table-cell text-ink-muted">
                         {new Date(patient.dateOfBirth).toLocaleDateString()}
                       </td>
                       <td className="px-5 py-4 hidden sm:table-cell">
                         {patient.consentGiven ? (
-                          <span className="inline-flex items-center gap-1.5 px-2 py-[3px] rounded-md text-[11px] font-semibold" style={{ background: "rgba(16, 185, 129, 0.1)", color: "#047857" }}>
+                          <span className="inline-flex items-center gap-1.5 px-2 py-[3px] rounded-md text-[11px] font-semibold" style={{ background: "rgb(var(--tone-emerald) / 0.1)", color: "var(--tone-emerald-ink)" }}>
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                             Active
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2 py-[3px] rounded-md text-[11px] font-semibold" style={{ background: "rgba(245, 158, 11, 0.1)", color: "#b45309" }}>
+                          <span className="inline-flex items-center gap-1.5 px-2 py-[3px] rounded-md text-[11px] font-semibold" style={{ background: "rgb(var(--tone-amber) / 0.1)", color: "var(--tone-amber-ink)" }}>
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                             Pending Consent
                           </span>
                         )}
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <Link href={`/patients/${patient.id}`} className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg text-[#019d8e] bg-[#019d8e]/10 hover:bg-[#019d8e]/20 transition-colors">
+                        <Link href={`/patients/${patient.id}`} className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg text-brand bg-brand/10 hover:bg-brand/20 transition-colors">
                           View Record
                         </Link>
                       </td>
@@ -316,10 +316,10 @@ export default function PatientDirectoryClient({
             </table>
           </div>
           {filteredPatients.length > 0 && (
-            <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid var(--border)", background: "var(--surface-hover)" }}>
-              <p className="text-xs text-stone-400">
-                Showing <span className="font-semibold text-stone-800">{filteredPatients.length}</span> of{" "}
-                <span className="font-semibold text-stone-800">{initialPatients.length}</span> patients
+            <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid var(--line)", background: "var(--raised)" }}>
+              <p className="text-xs text-ink-faint">
+                Showing <span className="font-semibold text-ink">{filteredPatients.length}</span> of{" "}
+                <span className="font-semibold text-ink">{initialPatients.length}</span> patients
               </p>
             </div>
           )}
@@ -332,12 +332,12 @@ export default function PatientDirectoryClient({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Patient</th>
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Reason</th>
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Due Date</th>
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Urgency</th>
-                  <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-stone-400">Actions</th>
+                <tr style={{ borderBottom: "1px solid var(--line)" }}>
+                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Patient</th>
+                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Reason</th>
+                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Due Date</th>
+                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Urgency</th>
+                  <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -345,11 +345,11 @@ export default function PatientDirectoryClient({
                   <tr>
                     <td colSpan={5} className="px-5 py-14 text-center">
                       <div className="flex flex-col items-center">
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3" style={{ background: "rgba(16, 185, 129, 0.1)" }}>
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3" style={{ background: "rgb(var(--tone-emerald) / 0.1)" }}>
                           <RefreshCcw className="w-5 h-5" style={{ color: "#10b981" }} />
                         </div>
-                        <p className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>No recalls due</p>
-                        <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>All patients are up to date.</p>
+                        <p className="font-semibold text-sm" style={{ color: "var(--ink)" }}>No recalls due</p>
+                        <p className="text-xs mt-1" style={{ color: "var(--ink-faint)" }}>All patients are up to date.</p>
                       </div>
                     </td>
                   </tr>
@@ -360,49 +360,49 @@ export default function PatientDirectoryClient({
                     const daysUntil = Math.ceil((dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 
                     return (
-                      <tr key={recall.id} className="stagger-row hover:bg-stone-50/70 transition-colors" style={{ borderBottom: "1px solid var(--border)" }}>
+                      <tr key={recall.id} className="stagger-row hover:bg-canvas/70 transition-colors" style={{ borderBottom: "1px solid var(--line)" }}>
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs text-white shrink-0" style={{ background: "linear-gradient(135deg, #f59e0b, #b45309)" }}>
                               {recall.patient.firstName[0]}{recall.patient.lastName[0]}
                             </div>
                             <div>
-                              <Link href={`/patients/${recall.patientId}`} className="font-semibold text-sm text-stone-900 hover:text-[#019d8e] transition-colors">
+                              <Link href={`/patients/${recall.patientId}`} className="font-semibold text-sm text-ink hover:text-brand transition-colors">
                                 {recall.patient.firstName} {recall.patient.lastName}
                               </Link>
-                              <span className="text-[11px] text-stone-400 block">{recall.patient.phone}</span>
+                              <span className="text-[11px] text-ink-faint block">{recall.patient.phone}</span>
                             </div>
                           </div>
                         </td>
-                        <td className="px-5 py-4" style={{ color: "var(--text-secondary)" }}>
+                        <td className="px-5 py-4" style={{ color: "var(--ink-muted)" }}>
                           {recall.reason || "Scheduled recall"}
                         </td>
                         <td className="px-5 py-4">
-                          <span className="flex items-center gap-1.5 text-sm" style={{ color: isOverdue ? "#b91c1c" : "var(--foreground)" }}>
+                          <span className="flex items-center gap-1.5 text-sm" style={{ color: isOverdue ? "var(--tone-red-ink)" : "var(--ink)" }}>
                             <Calendar className="w-3.5 h-3.5" />
                             {dueDate.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
                           </span>
                         </td>
                         <td className="px-5 py-4">
                           {isOverdue ? (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-[3px] rounded-md text-[11px] font-semibold" style={{ background: "rgba(239, 68, 68, 0.1)", color: "#b91c1c" }}>
+                            <span className="inline-flex items-center gap-1.5 px-2 py-[3px] rounded-md text-[11px] font-semibold" style={{ background: "rgb(var(--tone-red) / 0.1)", color: "var(--tone-red-ink)" }}>
                               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                               {Math.abs(daysUntil)} days overdue
                             </span>
                           ) : daysUntil <= 7 ? (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-[3px] rounded-md text-[11px] font-semibold" style={{ background: "rgba(245, 158, 11, 0.1)", color: "#b45309" }}>
+                            <span className="inline-flex items-center gap-1.5 px-2 py-[3px] rounded-md text-[11px] font-semibold" style={{ background: "rgb(var(--tone-amber) / 0.1)", color: "var(--tone-amber-ink)" }}>
                               <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                               {daysUntil} day{daysUntil !== 1 ? "s" : ""} left
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-[3px] rounded-md text-[11px] font-semibold" style={{ background: "rgba(14, 165, 233, 0.1)", color: "#0369a1" }}>
-                              <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+                            <span className="inline-flex items-center gap-1.5 px-2 py-[3px] rounded-md text-[11px] font-semibold" style={{ background: "rgb(var(--tone-sky) / 0.1)", color: "var(--tone-sky-ink)" }}>
+                              <span className="w-1.5 h-1.5 rounded-full bg-status-scheduled" />
                               In {daysUntil} days
                             </span>
                           )}
                         </td>
                         <td className="px-5 py-4 text-right">
-                          <Link href={`/patients/${recall.patientId}`} className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg text-[#019d8e] bg-[#019d8e]/10 hover:bg-[#019d8e]/20 transition-colors">
+                          <Link href={`/patients/${recall.patientId}`} className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg text-brand bg-brand/10 hover:bg-brand/20 transition-colors">
                             View Chart
                           </Link>
                         </td>
@@ -422,12 +422,12 @@ export default function PatientDirectoryClient({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Patient</th>
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Treatment Plan</th>
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Amount</th>
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Status</th>
-                  <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-stone-400">Actions</th>
+                <tr style={{ borderBottom: "1px solid var(--line)" }}>
+                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Patient</th>
+                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Treatment Plan</th>
+                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Amount</th>
+                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Status</th>
+                  <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -435,43 +435,43 @@ export default function PatientDirectoryClient({
                   <tr>
                     <td colSpan={5} className="px-5 py-14 text-center">
                       <div className="flex flex-col items-center">
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3" style={{ background: "rgba(16, 185, 129, 0.1)" }}>
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3" style={{ background: "rgb(var(--tone-emerald) / 0.1)" }}>
                           <Wallet className="w-5 h-5" style={{ color: "#10b981" }} />
                         </div>
-                        <p className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>No outstanding balances</p>
-                        <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>All accounts are settled.</p>
+                        <p className="font-semibold text-sm" style={{ color: "var(--ink)" }}>No outstanding balances</p>
+                        <p className="text-xs mt-1" style={{ color: "var(--ink-faint)" }}>All accounts are settled.</p>
                       </div>
                     </td>
                   </tr>
                 ) : (
                   filteredBalances.map((balance) => (
-                    <tr key={balance.id} className="stagger-row hover:bg-stone-50/70 transition-colors" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <tr key={balance.id} className="stagger-row hover:bg-canvas/70 transition-colors" style={{ borderBottom: "1px solid var(--line)" }}>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs text-white shrink-0" style={{ background: "linear-gradient(135deg, #ef4444, #b91c1c)" }}>
                             {balance.patient.firstName[0]}{balance.patient.lastName[0]}
                           </div>
                           <div>
-                            <Link href={`/patients/${balance.patientId}`} className="font-semibold text-sm text-stone-900 hover:text-[#019d8e] transition-colors">
+                            <Link href={`/patients/${balance.patientId}`} className="font-semibold text-sm text-ink hover:text-brand transition-colors">
                               {balance.patient.firstName} {balance.patient.lastName}
                             </Link>
-                            <span className="text-[11px] text-stone-400 block">{balance.patient.phone}</span>
+                            <span className="text-[11px] text-ink-faint block">{balance.patient.phone}</span>
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-4" style={{ color: "var(--text-secondary)" }}>
+                      <td className="px-5 py-4" style={{ color: "var(--ink-muted)" }}>
                         {balance.title}
                       </td>
                       <td className="px-5 py-4">
-                        <span className="text-sm font-bold" style={{ color: "var(--foreground)" }}>
-                          {balance.estimatedCost != null ? `₦${balance.estimatedCost.toLocaleString()}` : "—"}
+                        <span className="text-sm font-bold" style={{ color: "var(--ink)" }}>
+                          {balance.estimatedCost != null ? `₹${balance.estimatedCost.toLocaleString("en-IN")}` : "—"}
                         </span>
                       </td>
                       <td className="px-5 py-4">
                         <StatusBadge status={balance.billingStatus} />
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <Link href={`/patients/${balance.patientId}`} className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg text-[#019d8e] bg-[#019d8e]/10 hover:bg-[#019d8e]/20 transition-colors">
+                        <Link href={`/patients/${balance.patientId}`} className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg text-brand bg-brand/10 hover:bg-brand/20 transition-colors">
                           View Record
                         </Link>
                       </td>

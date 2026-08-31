@@ -31,7 +31,7 @@ export default function TreatmentPlanActions({
         })
       }
       disabled={isPending}
-      className="text-xs bg-blue-600 text-white py-1 px-3 rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+      className="text-xs btn-primary py-1 px-3 rounded disabled:opacity-50 transition-colors"
     >
       {isPending ? "Updating…" : next.label}
     </button>

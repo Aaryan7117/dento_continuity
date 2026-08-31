@@ -24,39 +24,39 @@ export default async function DashboardPage() {
       value: stats.todayAppointmentCount,
       icon: CalendarCheck,
       accent: "#0ea5e9",
-      accentBg: "rgba(14, 165, 233, 0.08)",
+      accentBg: "rgb(var(--tone-sky) / 0.08)",
       href: "/front-desk",
     },
     {
       label: "No-Shows Today",
       value: stats.todayNoShowCount,
       icon: UserMinus,
-      accent: stats.todayNoShowCount > 0 ? "#ef4444" : "#a8a29e",
-      accentBg: stats.todayNoShowCount > 0 ? "rgba(239, 68, 68, 0.08)" : "rgba(168, 162, 158, 0.08)",
+      accent: stats.todayNoShowCount > 0 ? "#ef4444" : "var(--ink-faint)",
+      accentBg: stats.todayNoShowCount > 0 ? "rgb(var(--tone-red) / 0.08)" : "rgb(var(--tone-neutral) / 0.08)",
       href: "/front-desk?filter=NO_SHOW",
     },
     {
       label: "Pending Agent Tasks",
       value: stats.pendingRecommendationCount,
       icon: Activity,
-      accent: stats.pendingRecommendationCount > 0 ? "#f59e0b" : "#a8a29e",
-      accentBg: stats.pendingRecommendationCount > 0 ? "rgba(245, 158, 11, 0.08)" : "rgba(168, 162, 158, 0.08)",
+      accent: stats.pendingRecommendationCount > 0 ? "#f59e0b" : "var(--ink-faint)",
+      accentBg: stats.pendingRecommendationCount > 0 ? "rgb(var(--tone-amber) / 0.08)" : "rgb(var(--tone-neutral) / 0.08)",
       href: "/front-desk#continuity",
     },
     {
       label: "Recalls Due",
       value: stats.recallsDueCount,
       icon: RefreshCcw,
-      accent: stats.recallsDueCount > 0 ? "#f59e0b" : "#a8a29e",
-      accentBg: stats.recallsDueCount > 0 ? "rgba(245, 158, 11, 0.08)" : "rgba(168, 162, 158, 0.08)",
+      accent: stats.recallsDueCount > 0 ? "#f59e0b" : "var(--ink-faint)",
+      accentBg: stats.recallsDueCount > 0 ? "rgb(var(--tone-amber) / 0.08)" : "rgb(var(--tone-neutral) / 0.08)",
       href: "/patients?tab=recalls",
     },
     {
       label: "Outstanding Balances",
       value: stats.outstandingBalanceCount,
       icon: AlertCircle,
-      accent: stats.outstandingBalanceCount > 0 ? "#ef4444" : "#a8a29e",
-      accentBg: stats.outstandingBalanceCount > 0 ? "rgba(239, 68, 68, 0.08)" : "rgba(168, 162, 158, 0.08)",
+      accent: stats.outstandingBalanceCount > 0 ? "#ef4444" : "var(--ink-faint)",
+      accentBg: stats.outstandingBalanceCount > 0 ? "rgb(var(--tone-red) / 0.08)" : "rgb(var(--tone-neutral) / 0.08)",
       href: "/patients?tab=balances",
     },
     {
@@ -64,7 +64,7 @@ export default async function DashboardPage() {
       value: stats.revenueRecovered,
       icon: Wallet,
       accent: "#10b981",
-      accentBg: "rgba(16, 185, 129, 0.08)",
+      accentBg: "rgb(var(--tone-emerald) / 0.08)",
       isCurrency: true,
       href: "/front-desk?filter=recovered",
     },
@@ -73,10 +73,10 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>
+        <h1 className="text-2xl font-bold" style={{ color: "var(--ink)" }}>
           Practice Overview
         </h1>
-        <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
+        <p className="text-sm mt-1" style={{ color: "var(--ink-muted)" }}>
           Here&apos;s what&apos;s happening at your clinic today.
         </p>
       </div>
@@ -94,12 +94,12 @@ export default async function DashboardPage() {
           >
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-[13px] font-medium" style={{ color: "var(--text-secondary)" }}>
+                <p className="text-[13px] font-medium" style={{ color: "var(--ink-muted)" }}>
                   {card.label}
                 </p>
-                <div className="text-[28px] font-bold mt-1.5" style={{ color: "var(--foreground)" }}>
+                <div className="text-[28px] font-bold mt-1.5" style={{ color: "var(--ink)" }}>
                   {card.isCurrency ? (
-                    <AnimatedNumber value={card.value} prefix="₦" />
+                    <AnimatedNumber value={card.value} prefix="₹" />
                   ) : (
                     <AnimatedNumber value={card.value} />
                   )}
@@ -134,7 +134,7 @@ export default async function DashboardPage() {
         <div
           className="rounded-2xl p-7 relative overflow-hidden stagger-item"
           style={{
-            background: "linear-gradient(135deg, #019d8e 0%, #0d524d 100%)",
+            background: "var(--grad-brand-deep)",
           }}
         >
           {/* Decorative icon — subtle, not noisy */}
@@ -153,7 +153,7 @@ export default async function DashboardPage() {
               </strong>{" "}
               worth{" "}
               <strong className="text-white">
-                ₦{stats.revenueRecovered.toLocaleString()}
+                ₹{stats.revenueRecovered.toLocaleString("en-IN")}
               </strong>{" "}
               in estimated revenue from no-shows.
             </p>

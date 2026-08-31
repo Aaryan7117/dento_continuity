@@ -449,7 +449,7 @@ async function main() {
       reason:
         "Marcus missed visit 2 of an accepted 3-visit crown plan and is currently wearing a temporary crown. " +
         "He has attended all five previous appointments, so this is out of character. " +
-        "Leaving the temporary in place risks failure and rework, and ₦860 of the accepted plan is unbilled.",
+        "Leaving the temporary in place risks failure and rework, and ₹86,000 of the accepted plan is unbilled.",
       draftMessage:
         `Hi ${marcus.firstName}, we missed you this morning for your crown fitting with Dr. Adeleke. ` +
         "Since you're still in a temporary crown we'd like to get you rebooked soon. " +

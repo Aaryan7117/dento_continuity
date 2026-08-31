@@ -42,19 +42,19 @@ export default function NewPatientPage() {
 
   const inputStyle = {
     background: "var(--surface)",
-    border: "1px solid var(--border)",
-    color: "var(--foreground)",
+    border: "1px solid var(--line)",
+    color: "var(--ink)",
     transition:
       "border-color 150ms var(--ease-out), box-shadow 150ms var(--ease-out)",
   };
 
   function focusHandler(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
-    e.currentTarget.style.borderColor = "#019d8e";
-    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(1, 157, 142, 0.08)";
+    e.currentTarget.style.borderColor = "var(--brand)";
+    e.currentTarget.style.boxShadow = "0 0 0 3px rgb(var(--brand-rgb) / 0.08)";
   }
 
   function blurHandler(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
-    e.currentTarget.style.borderColor = "var(--border)";
+    e.currentTarget.style.borderColor = "var(--line)";
     e.currentTarget.style.boxShadow = "none";
   }
 
@@ -66,7 +66,7 @@ export default function NewPatientPage() {
           className="p-2 rounded-lg no-press"
           data-no-press
           style={{
-            color: "var(--text-tertiary)",
+            color: "var(--ink-faint)",
             transition: "color 150ms var(--ease-out)",
           }}
         >
@@ -75,12 +75,12 @@ export default function NewPatientPage() {
         <div>
           <h1
             className="text-2xl font-bold flex items-center gap-2"
-            style={{ color: "var(--foreground)" }}
+            style={{ color: "var(--ink)" }}
           >
-            <UserPlus className="w-6 h-6" style={{ color: "#019d8e" }} />
+            <UserPlus className="w-6 h-6" style={{ color: "var(--brand)" }} />
             New Patient
           </h1>
-          <p className="text-sm mt-0.5" style={{ color: "var(--text-secondary)" }}>
+          <p className="text-sm mt-0.5" style={{ color: "var(--ink-muted)" }}>
             Register a new patient record.
           </p>
         </div>
@@ -90,7 +90,7 @@ export default function NewPatientPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-1.5 stagger-item">
-              <label className="text-[13px] font-semibold" style={{ color: "var(--foreground)" }}>
+              <label className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
                 First Name <span style={{ color: "#ef4444" }}>*</span>
               </label>
               <input
@@ -105,7 +105,7 @@ export default function NewPatientPage() {
               />
             </div>
             <div className="space-y-1.5 stagger-item">
-              <label className="text-[13px] font-semibold" style={{ color: "var(--foreground)" }}>
+              <label className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
                 Last Name <span style={{ color: "#ef4444" }}>*</span>
               </label>
               <input
@@ -120,7 +120,7 @@ export default function NewPatientPage() {
               />
             </div>
             <div className="space-y-1.5 stagger-item">
-              <label className="text-[13px] font-semibold" style={{ color: "var(--foreground)" }}>
+              <label className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
                 Date of Birth <span style={{ color: "#ef4444" }}>*</span>
               </label>
               <input
@@ -134,7 +134,7 @@ export default function NewPatientPage() {
               />
             </div>
             <div className="space-y-1.5 stagger-item">
-              <label className="text-[13px] font-semibold" style={{ color: "var(--foreground)" }}>
+              <label className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
                 Phone <span style={{ color: "#ef4444" }}>*</span>
               </label>
               <input
@@ -149,7 +149,7 @@ export default function NewPatientPage() {
               />
             </div>
             <div className="space-y-1.5 stagger-item">
-              <label className="text-[13px] font-semibold" style={{ color: "var(--foreground)" }}>
+              <label className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
                 Email
               </label>
               <input
@@ -163,7 +163,7 @@ export default function NewPatientPage() {
               />
             </div>
             <div className="space-y-1.5 md:col-span-2 stagger-item">
-              <label className="text-[13px] font-semibold" style={{ color: "var(--foreground)" }}>
+              <label className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
                 Address
               </label>
               <input
@@ -178,18 +178,18 @@ export default function NewPatientPage() {
             </div>
           </div>
 
-          <div className="pt-3 stagger-item" style={{ borderTop: "1px solid var(--border)" }}>
+          <div className="pt-3 stagger-item" style={{ borderTop: "1px solid var(--line)" }}>
             <label className="flex items-start gap-3 cursor-pointer group">
               <input
                 type="checkbox"
                 name="consentGiven"
-                className="mt-1 w-4 h-4 rounded cursor-pointer accent-[#019d8e]"
+                className="mt-1 w-4 h-4 rounded cursor-pointer accent-brand"
               />
               <div>
-                <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+                <span className="text-sm font-semibold" style={{ color: "var(--ink)" }}>
                   Patient Consent
                 </span>
-                <span className="block text-xs mt-0.5" style={{ color: "var(--text-tertiary)" }}>
+                <span className="block text-xs mt-0.5" style={{ color: "var(--ink-faint)" }}>
                   Patient has read and signed the clinic consent forms.
                 </span>
               </div>
@@ -202,8 +202,8 @@ export default function NewPatientPage() {
               className="px-4 py-2.5 text-sm font-semibold rounded-xl no-press"
               data-no-press
               style={{
-                color: "var(--text-secondary)",
-                border: "1px solid var(--border)",
+                color: "var(--ink-muted)",
+                border: "1px solid var(--line)",
                 transition: "background 150ms var(--ease-out)",
               }}
             >
@@ -214,7 +214,7 @@ export default function NewPatientPage() {
               type="submit"
               className="flex items-center gap-1.5 px-5 py-2.5 text-sm font-semibold text-white rounded-xl disabled:opacity-60"
               style={{
-                background: "linear-gradient(135deg, #019d8e, #067d73)",
+                background: "var(--grad-brand)",
                 transition: "opacity 150ms var(--ease-out)",
               }}
             >

@@ -30,20 +30,22 @@ function formatWeekRange(start: Date): string {
 }
 
 function getCellColor(count: number, max: number): string {
-  if (count === 0) return "var(--surface-hover)";
+  if (count === 0) return "var(--raised)";
   const intensity = max > 0 ? count / max : 0;
   // Deep teal gradient
-  if (intensity <= 0.25) return "rgba(1, 157, 142, 0.12)";
-  if (intensity <= 0.5) return "rgba(1, 157, 142, 0.28)";
-  if (intensity <= 0.75) return "rgba(1, 157, 142, 0.5)";
-  return "rgba(1, 157, 142, 0.75)";
+  if (intensity <= 0.25) return "rgb(var(--brand-rgb) / 0.12)";
+  if (intensity <= 0.5) return "rgb(var(--brand-rgb) / 0.28)";
+  if (intensity <= 0.75) return "rgb(var(--brand-rgb) / 0.5)";
+  return "rgb(var(--brand-rgb) / 0.75)";
 }
 
 function getCellTextColor(count: number, max: number): string {
-  if (count === 0) return "var(--text-tertiary)";
+  if (count === 0) return "var(--ink-faint)";
   const intensity = max > 0 ? count / max : 0;
-  if (intensity <= 0.5) return "#067d73";
-  return "#ffffff";
+  if (intensity <= 0.5) return "var(--brand)";
+  // The dense cells are near-opaque brand, so the readable text is whatever
+  // contrasts with brand — white in light mode, dark in dark mode.
+  return "var(--canvas)";
 }
 
 export default function ChairHeatmap() {
@@ -84,53 +86,53 @@ export default function ChairHeatmap() {
     <div className="card p-6 stagger-item">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
         <div>
-          <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: "var(--foreground)" }}>
-            <Activity className="w-5 h-5" style={{ color: "#019d8e" }} />
+          <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: "var(--ink)" }}>
+            <Activity className="w-5 h-5" style={{ color: "var(--brand)" }} />
             Chair Utilization
           </h2>
-          <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
+          <p className="text-xs mt-1" style={{ color: "var(--ink-muted)" }}>
             Appointment density by day and hour
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setWeekOffset((w) => w - 1)}
-            className="p-1.5 rounded-lg hover:bg-stone-100 transition-colors"
-            style={{ border: "1px solid var(--border)" }}
+            className="p-1.5 rounded-lg hover:bg-raised transition-colors"
+            style={{ border: "1px solid var(--line)" }}
           >
-            <ChevronLeft className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
+            <ChevronLeft className="w-4 h-4" style={{ color: "var(--ink-muted)" }} />
           </button>
           <button
             onClick={() => setWeekOffset(0)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              isThisWeek ? "bg-[#019d8e]/10 text-[#019d8e]" : "hover:bg-stone-100"
+              isThisWeek ? "bg-brand/10 text-brand" : "hover:bg-raised"
             }`}
-            style={{ border: "1px solid var(--border)" }}
+            style={{ border: "1px solid var(--line)" }}
           >
             This Week
           </button>
           <button
             onClick={() => setWeekOffset((w) => w + 1)}
-            className="p-1.5 rounded-lg hover:bg-stone-100 transition-colors"
-            style={{ border: "1px solid var(--border)" }}
+            className="p-1.5 rounded-lg hover:bg-raised transition-colors"
+            style={{ border: "1px solid var(--line)" }}
           >
-            <ChevronRight className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
+            <ChevronRight className="w-4 h-4" style={{ color: "var(--ink-muted)" }} />
           </button>
-          <span className="text-xs font-medium ml-2" style={{ color: "var(--text-tertiary)" }}>
+          <span className="text-xs font-medium ml-2" style={{ color: "var(--ink-faint)" }}>
             {formatWeekRange(weekStart)}
           </span>
         </div>
       </div>
 
       {/* Stats Bar */}
-      <div className="flex items-center gap-6 mb-4 text-xs" style={{ color: "var(--text-secondary)" }}>
+      <div className="flex items-center gap-6 mb-4 text-xs" style={{ color: "var(--ink-muted)" }}>
         <span>
-          Total bookings: <strong className="font-bold" style={{ color: "var(--foreground)" }}>{totalBooked}</strong>
+          Total bookings: <strong className="font-bold" style={{ color: "var(--ink)" }}>{totalBooked}</strong>
         </span>
         {peakSlot && (
           <span>
             Peak:{" "}
-            <strong className="font-bold" style={{ color: "#019d8e" }}>
+            <strong className="font-bold" style={{ color: "var(--brand)" }}>
               {DAY_LABELS[peakSlot.dayOfWeek]} {HOUR_LABELS[peakSlot.hour - 8]}
             </strong>{" "}
             ({peakSlot.count} appt{peakSlot.count !== 1 ? "s" : ""})
@@ -145,7 +147,7 @@ export default function ChairHeatmap() {
           <div className="grid gap-1" style={{ gridTemplateColumns: "60px repeat(10, 1fr)" }}>
             <div /> {/* spacer */}
             {HOUR_LABELS.map((h) => (
-              <div key={h} className="text-center text-[10px] font-semibold pb-1.5" style={{ color: "var(--text-tertiary)" }}>
+              <div key={h} className="text-center text-[10px] font-semibold pb-1.5" style={{ color: "var(--ink-faint)" }}>
                 {h}
               </div>
             ))}
@@ -158,7 +160,7 @@ export default function ChairHeatmap() {
               className="grid gap-1 mb-1"
               style={{ gridTemplateColumns: "60px repeat(10, 1fr)" }}
             >
-              <div className="flex items-center text-[11px] font-semibold pr-2" style={{ color: "var(--text-secondary)" }}>
+              <div className="flex items-center text-[11px] font-semibold pr-2" style={{ color: "var(--ink-muted)" }}>
                 {dayLabel}
               </div>
               {Array.from({ length: 10 }, (_, hourOffset) => {
@@ -178,7 +180,7 @@ export default function ChairHeatmap() {
                       transition: "background 200ms var(--ease-out), transform 150ms var(--ease-out)",
                       transform: isHovered ? "scale(1.08)" : "scale(1)",
                       zIndex: isHovered ? 10 : 1,
-                      boxShadow: isHovered ? "0 4px 12px rgba(0,0,0,0.12)" : "none",
+                      boxShadow: isHovered ? "0 4px 12px var(--shadow-ambient)" : "none",
                     }}
                     onMouseEnter={() => setHoveredCell({ day: dayIdx, hour })}
                     onMouseLeave={() => setHoveredCell(null)}
@@ -192,9 +194,9 @@ export default function ChairHeatmap() {
                       <div
                         className="absolute -top-9 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg text-[10px] font-semibold whitespace-nowrap z-20"
                         style={{
-                          background: "var(--foreground)",
-                          color: "var(--background)",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                          background: "var(--ink)",
+                          color: "var(--canvas)",
+                          boxShadow: "0 4px 12px var(--shadow-ambient)",
                         }}
                       >
                         {dayLabel} {HOUR_LABELS[hourOffset]}: {count} appt{count !== 1 ? "s" : ""}
@@ -210,7 +212,7 @@ export default function ChairHeatmap() {
 
       {/* Legend */}
       <div className="flex items-center gap-3 mt-4 justify-end">
-        <span className="text-[10px] font-medium" style={{ color: "var(--text-tertiary)" }}>Less</span>
+        <span className="text-[10px] font-medium" style={{ color: "var(--ink-faint)" }}>Less</span>
         {[0, 0.25, 0.5, 0.75, 1].map((intensity) => (
           <div
             key={intensity}
@@ -218,7 +220,7 @@ export default function ChairHeatmap() {
             style={{ background: getCellColor(intensity * 4, 4) }}
           />
         ))}
-        <span className="text-[10px] font-medium" style={{ color: "var(--text-tertiary)" }}>More</span>
+        <span className="text-[10px] font-medium" style={{ color: "var(--ink-faint)" }}>More</span>
       </div>
     </div>
   );
