@@ -32,6 +32,7 @@
       "package.json",
       ".env",
       "lib/**/*",
+      "next.config.ts",
       "node_modules/**/*"
     ],
     "win": {
