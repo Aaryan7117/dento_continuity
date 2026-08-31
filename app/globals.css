@@ -388,6 +388,200 @@ button.no-press:active, [data-no-press]:active {
 }
 
 /* Dark mode inverts the direction — brightness(0.92) reads as "nothing happened"
+
+p, span, td, th, label, li {
+  letter-spacing: 0;
+  line-height: 1.6;
+}
+
+small, .text-xs, .text-sm {
+  letter-spacing: 0.01em;
+}
+
+/* ── Button: press feedback — the #1 missing detail ── */
+button, [role="button"], a[href] {
+  /* NO blanket transition — each component owns its own */
+}
+
+@media (hover: hover) and (pointer: fine) {
+  button:hover, [role="button"]:hover {
+    /* Components define their own hovers */
+  }
+}
+
+button:active, [role="button"]:active {
+  transform: scale(0.97);
+  transition: transform 100ms var(--ease-out);
+}
+
+/* Exempt tiny inline elements from scale (badges, etc.) */
+button.no-press:active, [data-no-press]:active {
+  transform: none;
+}
+
+/* ── Stagger animation system ── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stagger-item {
+  opacity: 0;
+  animation: fadeInUp 400ms var(--ease-out) forwards;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0ms; }
+.stagger-item:nth-child(2) { animation-delay: 50ms; }
+.stagger-item:nth-child(3) { animation-delay: 100ms; }
+.stagger-item:nth-child(4) { animation-delay: 150ms; }
+.stagger-item:nth-child(5) { animation-delay: 200ms; }
+.stagger-item:nth-child(6) { animation-delay: 250ms; }
+.stagger-item:nth-child(7) { animation-delay: 300ms; }
+.stagger-item:nth-child(8) { animation-delay: 350ms; }
+.stagger-item:nth-child(n+9) { animation-delay: 400ms; }
+
+/* Faster stagger for table rows (30ms gap) */
+.stagger-row {
+  opacity: 0;
+  animation: fadeInUp 300ms var(--ease-out) forwards;
+}
+
+.stagger-row:nth-child(1) { animation-delay: 0ms; }
+.stagger-row:nth-child(2) { animation-delay: 30ms; }
+.stagger-row:nth-child(3) { animation-delay: 60ms; }
+.stagger-row:nth-child(4) { animation-delay: 90ms; }
+.stagger-row:nth-child(5) { animation-delay: 120ms; }
+.stagger-row:nth-child(6) { animation-delay: 150ms; }
+.stagger-row:nth-child(7) { animation-delay: 180ms; }
+.stagger-row:nth-child(8) { animation-delay: 210ms; }
+.stagger-row:nth-child(9) { animation-delay: 240ms; }
+.stagger-row:nth-child(10) { animation-delay: 270ms; }
+.stagger-row:nth-child(n+11) { animation-delay: 300ms; }
+
+/* ── Page section entrance ── */
+@keyframes sectionIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.section-enter {
+  animation: sectionIn 500ms var(--ease-out) forwards;
+}
+
+/* ── Pulse ring for "today" highlights ── */
+@keyframes pulseRing {
+  0%, 100% { box-shadow: 0 0 0 0 var(--brand-soft); }
+  50% { box-shadow: 0 0 0 6px transparent; }
+}
+
+.pulse-today {
+  animation: pulseRing 2s ease-in-out infinite;
+}
+
+/* ── Card & surface styling ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px var(--shadow-contact), 0 1px 2px var(--shadow-contact);
+  transition: box-shadow 200ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    box-shadow: 0 4px 12px var(--shadow-ambient), 0 1px 3px var(--shadow-contact);
+  }
+}
+
+/* ── Glassmorphism (Apple-style translucent chrome) ── */
+.glass {
+  background: var(--glass-tint);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--glass-edge);
+}
+
+/* ── Primary action button ──
+   Defined once so the white-on-teal pairing can't drift out of contrast when
+   the theme flips: the fill is a fixed gradient, so white always reads on it. */
+.btn-primary {
+  background: var(--grad-brand);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 2px var(--shadow-contact);
+  transition: box-shadow 200ms var(--ease-out), opacity 200ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover:not(:disabled) {
+    box-shadow: 0 4px 14px rgb(var(--brand-rgb) / 0.32);
+  }
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+}
+
+/* ── Theme toggle icons ──
+   Driven by the .dark class rather than React state, so the correct icon is
+   already right at first paint and there's no cross-fade on load. */
+.theme-icon-sun,
+.theme-icon-moon {
+  transition: opacity 200ms var(--ease-out), transform 300ms var(--ease-out);
+}
+
+.theme-icon-sun  { opacity: 1; transform: rotate(0deg); }
+.theme-icon-moon { opacity: 0; transform: rotate(60deg); }
+.dark .theme-icon-sun  { opacity: 0; transform: rotate(-60deg); }
+.dark .theme-icon-moon { opacity: 1; transform: rotate(0deg); }
+
+/* ── Modal scrim ── */
+.scrim {
+  background: var(--scrim);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ── Custom scrollbar (subtle) ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-hover);
+}
+
+/* ── Tooth SVG hover effect (gated) ── */
+@media (hover: hover) and (pointer: fine) {
+  .tooth-cell:hover {
+    filter: brightness(0.92);
+    cursor: pointer;
+  }
+}
+.tooth-cell {
+  transition: filter 150ms var(--ease-out);
+}
+
+/* Dark mode inverts the direction — brightness(0.92) reads as "nothing happened"
    on a dark surface. */
 .dark .tooth-cell:hover {
   filter: brightness(1.12);
@@ -418,9 +612,8 @@ button.no-press:active, [data-no-press]:active {
 
 /* ═══════════════════════════════════════════════════════════════
    EDITORIAL — the marketing surface. Scoped to [data-theme="editorial"]
-   so the clinical app inherits none of its styling, but it now derives
-   from the same token layer and follows the light/dark toggle.
-   Deliberately higher-contrast than the app: it's a pitch, not a tool.
+   so the clinical app inherits none of its styling.
+   Permanently Dark Obsidian & Champagne Gold — studio luxury.
    ═══════════════════════════════════════════════════════════════ */
 
 /* Paint the real canvas too, so overscroll doesn't flash the app background. */
@@ -429,56 +622,7 @@ body:has([data-theme="editorial"]) {
 }
 
 [data-theme="editorial"] {
-  /* Light: cool porcelain and ink, with jewellery-warm champagne. */
-  --stage: #f7f6f2;
-  --ash: #fffdfa;
-  --hairline: rgba(30, 28, 24, 0.11);
-
-  --gold: #9f7d35;
-  --gold-light: #d8b868;
-  --gold-wash: rgba(216, 184, 104, 0.10);
-  --gold-hairline: rgba(159, 125, 53, 0.25);
-
-  --champagne: #d8b868;
-  --ivory: #fff7e8;
-  --jade: #39c6b3;
-  --oxblood: #7f3136;
-
-  --teal: #147f73;
-  --teal-light: #1fb6a5;
-  --teal-wash: rgba(31, 182, 165, 0.10);
-
-  --ink: #12100d;
-  --ink-soft: #2c2822;
-  --ink-muted: #665e52;
-  --ink-faint: #8a8175;
-
-  /* Re-point the shared app tokens at editorial equivalents, so components
-     used on both surfaces (ThemeToggle) pick up the right hairline. */
-  --line: var(--hairline);
-  --line-strong: var(--gold-hairline);
-
-  --lift-1: 0 1px 2px rgba(28, 25, 23, 0.05), 0 12px 32px rgba(28, 25, 23, 0.07);
-  --lift-2: 0 1px 2px rgba(28, 25, 23, 0.06), 0 24px 60px rgba(28, 25, 23, 0.10);
-
-  --pane-tint: rgba(255, 253, 250, 0.84);
-  --glass-fill: rgba(18, 16, 13, 0.035);
-  --glass-fill-hover: rgba(18, 16, 13, 0.07);
-  --grain-opacity: 0.012;
-  --vignette: radial-gradient(
-    ellipse 90% 70% at 50% 40%,
-    transparent 50%,
-    rgba(120, 100, 60, 0.10) 100%
-  );
-
-  background-color: var(--stage);
-  color: var(--ink-soft);
-  font-family: var(--font-outfit), system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
-
-.dark [data-theme="editorial"] {
-  /* Dark: obsidian, not blue-black. */
+  /* Permanently Dark Obsidian & Champagne Gold — studio luxury */
   --stage: #080909;
   --ash: #101111;
   --hairline: rgba(255, 255, 255, 0.08);
@@ -499,7 +643,6 @@ body:has([data-theme="editorial"]) {
 
   --ink: #ffffff;
   --ink-soft: #cbd5e1;
-
   --ink-muted: #94a3b8;
   --ink-faint: #5b6873;
 
@@ -510,6 +653,24 @@ body:has([data-theme="editorial"]) {
   --pane-tint: rgba(19, 23, 26, 0.72);
   --glass-fill: rgba(255, 255, 255, 0.04);
   --glass-fill-hover: rgba(255, 255, 255, 0.07);
+  --grain-opacity: 0.035;
+  --vignette: radial-gradient(
+    ellipse 90% 70% at 50% 40%,
+    transparent 40%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+
+  background-color: var(--stage);
+  color: var(--ink-soft);
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+  --jade: #39c6b3;
+  --oxblood: #b4545d;
+
+  --teal: #1f9a8d;
+  --teal-light: #39c6b3;
+  --teal-wash: rgba(57, 198, 179, 0.11);
   --grain-opacity: 0.035;
   --vignette: radial-gradient(
     ellipse 90% 70% at 50% 40%,

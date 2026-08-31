@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-import ThemeToggle from "@/app/components/ThemeToggle";
 
 const LINKS = [
   { label: "The Record", href: "#arch" },
@@ -141,7 +140,6 @@ export default function LandingNav() {
           </ul>
 
           <div className="flex items-center gap-2.5">
-            <ThemeToggle />
             <Link
               href="/dashboard"
               className="btn-glass hidden h-9 items-center rounded-[8px] px-4 text-[12.5px] sm:inline-flex"
