@@ -1,6 +1,8 @@
 {
   "name": "dento-continuity",
   "version": "0.1.0",
+  "description": "Intelligent Dental Practice Management & Retention Studio",
+  "author": "DENTO Continuity",
   "private": true,
   "main": "electron/main.cjs",
   "scripts": {
@@ -22,6 +24,8 @@
     "files": [
       "electron/**/*",
       ".next/**/*",
+      "!.next/cache/**/*",
+      "!.next/dev/**/*",
       "public/**/*",
       "app/generated/**/*",
       "package.json",
