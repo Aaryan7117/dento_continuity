@@ -20,6 +20,7 @@
     "appId": "com.dentocontinuity.studio",
     "productName": "DENTO Continuity",
     "asar": false,
+    "afterPack": "scripts/after-pack.cjs",
     "directories": {
       "output": "dist-desktop"
     },

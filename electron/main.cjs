@@ -82,11 +82,23 @@ async function startServer() {
     NODE_ENV: "production",
   };
 
+  const logFile = path.join(app.getPath("userData"), "server.log");
+  const logStream = fs.createWriteStream(logFile, { flags: "a" });
+
   serverProcess = fork(nextCli, ["start", "-p", String(port), "-H", "127.0.0.1"], {
     cwd: appDir,
     env,
-    stdio: "ignore",
+    stdio: ["ignore", "pipe", "pipe", "ipc"],
   });
+
+  if (serverProcess.stdout) {
+    serverProcess.stdout.pipe(logStream);
+    serverProcess.stdout.pipe(process.stdout);
+  }
+  if (serverProcess.stderr) {
+    serverProcess.stderr.pipe(logStream);
+    serverProcess.stderr.pipe(process.stderr);
+  }
 
   // Poll until the server is ready (max 15 seconds)
   for (let i = 0; i < 75; i++) {
