@@ -1,71 +1,24 @@
-"use client";
+import { redirect } from "next/navigation";
+import { createEncounter } from "@/lib/encounters";
+import { getDentistActor } from "@/lib/actors";
 
-import { useState, useTransition } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { createEncounter } from "@/lib/actions";
+export const dynamic = "force-dynamic";
 
-export default function NewEncounterPage() {
-  const { id: patientId } = useParams<{ id: string }>();
-  const [summary, setSummary] = useState("");
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+export default async function NewEncounterPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id: patientId } = await params;
+  const dentist = await getDentistActor();
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const newEncounter = await createEncounter({
+    patientId,
+    providerId: dentist.id,
+    occurredAt: new Date().toISOString(),
+    summary: `Clinical Visit — ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`,
+  });
 
-    startTransition(async () => {
-      const result = await createEncounter({
-        patientId,
-        summary: summary || undefined,
-      });
-      if (result.ok) {
-        router.push(`/patients/${patientId}/encounters/${result.data.encounterId}`);
-      } else {
-        setError(result.error.message);
-      }
-    });
-  }
-
-  return (
-    <div className="max-w-lg mx-auto mt-8">
-      <h1 className="text-xl font-semibold text-ink mb-4">
-        Start New Encounter
-      </h1>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-ink mb-1">
-            Summary (optional)
-          </label>
-          <input
-            type="text"
-            value={summary}
-            onChange={(e) => setSummary(e.target.value)}
-            placeholder="e.g. Crown fitting — visit 2"
-            className="w-full border border-line-strong rounded-md px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand"
-          />
-        </div>
-
-        {error && <p className="text-sm text-red-600">{error}</p>}
-
-        <div className="flex gap-2">
-          <button
-            type="submit"
-            disabled={isPending}
-            className="btn-primary text-sm font-medium py-2 px-4 rounded-md disabled:opacity-50 transition-colors"
-          >
-            {isPending ? "Creating…" : "Create & Open Encounter"}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="text-sm text-ink-muted py-2 px-4 rounded-md hover:bg-raised transition-colors"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
-  );
+  redirect(`/patients/${patientId}/encounters/${newEncounter.id}`);
 }
+

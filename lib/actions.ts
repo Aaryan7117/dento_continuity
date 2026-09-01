@@ -32,7 +32,7 @@ import {
 import { createRecall as createRecallRecord } from "@/lib/recalls";
 import { FindingType, ToothSurface } from "@/app/generated/prisma/enums";
 import type { ApprovalFailure } from "@/lib/recommendations";
-import type { ApiResult } from "@/lib/contract";
+import type { ApiResult, ToothFinding } from "@/lib/contract";
 
 const invalid = (message = "Validation failed") =>
   ({ ok: false, error: { message } }) as const;
@@ -215,14 +215,14 @@ const addToothFindingSchema = z.object({
 
 export async function addToothFinding(
   input: z.input<typeof addToothFindingSchema>
-): Promise<ApiResult<{ findingId: string }>> {
+): Promise<ApiResult<{ findingId: string; finding: ToothFinding }>> {
   const parsed = addToothFindingSchema.safeParse(input);
   if (!parsed.success) return invalid();
 
   const finding = await createToothFinding(parsed.data, await getDentistActor());
 
   revalidatePath(`/patients/${finding.patientId}`);
-  return { ok: true, data: { findingId: finding.id } };
+  return { ok: true, data: { findingId: finding.id, finding } };
 }
 
 // ---------------------------------------------------------------------------

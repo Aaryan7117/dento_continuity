@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { addToothFinding } from "@/lib/actions";
+import type { ToothFinding } from "@/lib/contract";
 
 const FINDING_TYPES = [
   "CARIES",
@@ -25,10 +26,12 @@ export default function AddToothFindingForm({
   patientId,
   encounterId,
   preselectedTooth,
+  onFindingRecorded,
 }: {
   patientId: string;
   encounterId?: string;
   preselectedTooth?: number;
+  onFindingRecorded?: (newFinding: ToothFinding) => void;
 }) {
   const [toothCode, setToothCode] = useState(preselectedTooth ?? 11);
   const [finding, setFinding] = useState<(typeof FINDING_TYPES)[number]>("CARIES");
@@ -36,6 +39,12 @@ export default function AddToothFindingForm({
   const [note, setNote] = useState("");
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (preselectedTooth) {
+      setToothCode(preselectedTooth);
+    }
+  }, [preselectedTooth]);
 
   const isWholeTooth = WHOLE_TOOTH_FINDINGS.includes(finding);
 
@@ -53,8 +62,11 @@ export default function AddToothFindingForm({
       if (result.ok) {
         setNote("");
         setSurfaces([]);
-        setMessage("Finding recorded");
-        setTimeout(() => setMessage(null), 2000);
+        setMessage(`Tooth #${toothCode} finding recorded`);
+        if (result.data.finding) {
+          onFindingRecorded?.(result.data.finding);
+        }
+        setTimeout(() => setMessage(null), 2500);
       } else {
         setMessage(result.error.message);
       }
