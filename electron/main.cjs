@@ -65,6 +65,26 @@ function resolveNextSymlinks() {
   }
 }
 
+const net = require("net");
+
+function getAvailablePort(preferredPort = 3456) {
+  return new Promise((resolve) => {
+    const tester = net.createServer();
+    tester.once("error", () => {
+      const fallback = net.createServer();
+      fallback.once("error", () => resolve(3457));
+      fallback.listen(0, "127.0.0.1", () => {
+        const port = fallback.address().port;
+        fallback.close(() => resolve(port));
+      });
+    });
+    tester.listen(preferredPort, "127.0.0.1", () => {
+      const port = tester.address().port;
+      tester.close(() => resolve(port));
+    });
+  });
+}
+
 async function startServer() {
   if (isDev) {
     return 3000;
@@ -74,7 +94,7 @@ async function startServer() {
   resolveNextSymlinks();
 
   const nextCli = path.join(appDir, "node_modules", "next", "dist", "bin", "next");
-  const port = 3456;
+  const port = await getAvailablePort(3456);
   const env = {
     ...process.env,
     PORT: String(port),
@@ -192,11 +212,20 @@ app.whenReady().then(async () => {
   });
 });
 
-app.on("window-all-closed", () => {
+function killServer() {
   if (serverProcess) {
-    serverProcess.kill();
+    try {
+      serverProcess.kill("SIGTERM");
+    } catch (_) {}
+    serverProcess = null;
   }
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
+}
+
+app.on("before-quit", () => {
+  killServer();
+});
+
+app.on("window-all-closed", () => {
+  killServer();
+  app.quit();
 });
