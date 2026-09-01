@@ -23,10 +23,55 @@ for (const p of envPaths) {
 let mainWindow = null;
 let serverProcess = null;
 
+/**
+ * Resolve .next/node_modules symlinks that electron-builder can't copy.
+ * Prisma v7 + Turbopack creates hashed symlinks like:
+ *   .next/node_modules/@prisma/client-<hash> -> node_modules/@prisma/client
+ *   .next/node_modules/pg-<hash>             -> node_modules/pg
+ * We detect broken symlinks and copy the real modules in their place.
+ */
+function resolveNextSymlinks() {
+  const nextNodeModules = path.join(appDir, ".next", "node_modules");
+  if (!fs.existsSync(nextNodeModules)) return;
+
+  // Mapping of hashed names -> real source packages
+  const symlinkMap = {
+    "@prisma/client-2c3a283f134fdcb6": path.join(appDir, "node_modules", "@prisma", "client"),
+    "pg-587764f78a6c7a9c": path.join(appDir, "node_modules", "pg"),
+  };
+
+  for (const [hashedName, sourcePath] of Object.entries(symlinkMap)) {
+    const targetPath = path.join(nextNodeModules, ...hashedName.split("/"));
+
+    // Check if target already has the expected entry file
+    const testFile = hashedName.startsWith("@prisma")
+      ? path.join(targetPath, "runtime", "client.js")
+      : path.join(targetPath, "lib", "index.js");
+
+    if (fs.existsSync(testFile)) continue;
+
+    // Remove broken symlink/directory if present
+    try { fs.rmSync(targetPath, { recursive: true, force: true }); } catch (_) {}
+
+    // Copy real module (cross-platform)
+    if (fs.existsSync(sourcePath)) {
+      try {
+        fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+        fs.cpSync(sourcePath, targetPath, { recursive: true, force: true });
+      } catch (err) {
+        console.error(`Failed to resolve symlink ${hashedName}:`, err);
+      }
+    }
+  }
+}
+
 async function startServer() {
   if (isDev) {
     return 3000;
   }
+
+  // Fix Windows symlink issues before starting the server
+  resolveNextSymlinks();
 
   const nextCli = path.join(appDir, "node_modules", "next", "dist", "bin", "next");
   const port = 3456;

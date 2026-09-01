@@ -11,9 +11,10 @@
     "start": "next start",
     "lint": "eslint",
     "electron:dev": "cross-env NODE_ENV=development electron .",
-    "electron:pack": "npm run build && electron-builder --dir",
-    "electron:build:win": "npm run build && electron-builder --win",
-    "electron:build:mac": "npm run build && electron-builder --mac"
+    "electron:pack": "npm run build && node scripts/resolve-symlinks.cjs && electron-builder --dir",
+    "electron:build:win": "npm run build && node scripts/resolve-symlinks.cjs && electron-builder --win",
+    "electron:build:mac": "npm run build && node scripts/resolve-symlinks.cjs && electron-builder --mac",
+    "electron:build:all": "npm run build && node scripts/resolve-symlinks.cjs && electron-builder --win --mac"
   },
   "build": {
     "appId": "com.dentocontinuity.studio",
