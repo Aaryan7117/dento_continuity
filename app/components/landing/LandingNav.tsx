@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { Download, Menu, X } from "lucide-react";
 
 const LINKS = [
   { label: "The Record", href: "#arch" },
@@ -140,9 +140,17 @@ export default function LandingNav() {
           </ul>
 
           <div className="flex items-center gap-2.5">
+            <a
+              href="#arch"
+              className="btn-glass hidden h-9 items-center gap-1.5 rounded-[8px] px-3.5 text-[12px] sm:inline-flex"
+              style={{ color: "#ffffff", borderColor: "rgba(255,255,255,0.16)" }}
+            >
+              <Download className="h-3.5 w-3.5 text-[var(--gold)]" />
+              <span>Download Desktop</span>
+            </a>
             <Link
               href="/dashboard"
-              className="btn-glass hidden h-9 items-center rounded-[8px] px-4 text-[12.5px] sm:inline-flex"
+              className="btn-glass hidden h-9 items-center rounded-[8px] px-3.5 text-[12.5px] md:inline-flex"
               style={{ color: "#ffffff", borderColor: "rgba(255,255,255,0.16)" }}
             >
               Practice overview

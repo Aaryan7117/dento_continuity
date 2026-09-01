@@ -13,6 +13,7 @@ import {
   WandSparkles,
 } from "lucide-react";
 import HeroOdontogram from "./HeroOdontogram";
+import HeroDownloadHub from "./HeroDownloadHub";
 
 /**
  * Figures here are deliberately either structural facts about the product (FDI
@@ -81,28 +82,8 @@ export default function HeroArch() {
             waits for your front desk to approve it.
           </p>
 
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/front-desk"
-              className="btn-gold group inline-flex h-12 items-center justify-center gap-2 rounded-[8px] px-7 text-[13px]"
-            >
-              <Download className="h-4 w-4" />
-              Download Studio (.exe)
-              <ArrowUpRight className="h-4 w-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </Link>
-            <Link
-              href="/front-desk"
-              className="btn-glass inline-flex h-12 items-center justify-center gap-2 rounded-[8px] px-7 text-[13px]"
-            >
-              <Sparkles className="h-4 w-4 text-[var(--champagne)]" />
-              Launch Web Demo
-            </Link>
-          </div>
-
-          <div className="mt-3 flex items-center gap-2 text-[11px] text-white/50">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--jade)]" />
-            <span>Windows 10/11 (.exe) · macOS (.dmg) · Realtime Supabase Cloud Sync</span>
-          </div>
+          {/* Professional Cross-Platform Download Hub */}
+          <HeroDownloadHub />
 
           <div className="mt-10 grid max-w-[34rem] grid-cols-3 divide-x divide-white/10 border-y border-white/10">
             {SIGNALS.map((signal) => (
