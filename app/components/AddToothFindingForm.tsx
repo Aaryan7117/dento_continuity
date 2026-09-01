@@ -81,7 +81,7 @@ export default function AddToothFindingForm({
             max={48}
             value={toothCode}
             onChange={(e) => setToothCode(Number(e.target.value))}
-            className="w-full border border-line-strong rounded-md px-3 py-1.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand"
+            className="w-full bg-surface border border-line-strong rounded-md px-3 py-1.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand"
           />
         </div>
 
@@ -93,10 +93,10 @@ export default function AddToothFindingForm({
           <select
             value={finding}
             onChange={(e) => setFinding(e.target.value as typeof finding)}
-            className="w-full border border-line-strong rounded-md px-3 py-1.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand"
+            className="w-full bg-surface border border-line-strong rounded-md px-3 py-1.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
           >
             {FINDING_TYPES.map((f) => (
-              <option key={f} value={f}>
+              <option key={f} value={f} className="bg-surface text-ink">
                 {f.replace(/_/g, " ")}
               </option>
             ))}
@@ -139,7 +139,7 @@ export default function AddToothFindingForm({
         placeholder="Optional note…"
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        className="w-full border border-line-strong rounded-md px-3 py-1.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand"
+        className="w-full bg-surface border border-line-strong rounded-md px-3 py-1.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand"
       />
 
       <div className="flex items-center gap-2">

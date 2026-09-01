@@ -19,22 +19,31 @@ export default function AppointmentRowActions({
   currentStatus,
   patientName,
   startsAt,
+  openUpward = false,
   onStatusChanged,
+  onOpenChange,
 }: {
   appointmentId: string;
   currentStatus: string;
   patientName: string;
   startsAt?: string;
+  openUpward?: boolean;
   onStatusChanged?: (newStatus: string, slotContext?: { day: string; time: string; label: string }) => void;
+  onOpenChange?: (isOpen: boolean) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const menuRef = useRef<HTMLDivElement>(null);
 
+  const toggleOpen = (newVal: boolean) => {
+    setIsOpen(newVal);
+    onOpenChange?.(newVal);
+  };
+
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
+        toggleOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -43,11 +52,11 @@ export default function AppointmentRowActions({
 
   function handleSelectStatus(newStatus: "SCHEDULED" | "CONFIRMED" | "COMPLETED" | "NO_SHOW" | "CANCELLED") {
     if (newStatus === currentStatus) {
-      setIsOpen(false);
+      toggleOpen(false);
       return;
     }
 
-    setIsOpen(false);
+    toggleOpen(false);
     startTransition(async () => {
       const res = await changeAppointmentStatus({
         id: appointmentId,
@@ -85,9 +94,9 @@ export default function AppointmentRowActions({
   }
 
   return (
-    <div ref={menuRef} className="relative inline-block text-left">
+    <div ref={menuRef} className={`relative inline-block text-left ${isOpen ? "z-50" : "z-10"}`}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => toggleOpen(!isOpen)}
         disabled={isPending}
         className="inline-flex items-center gap-1 group py-0.5 px-1 rounded-lg hover:bg-raised/80 transition-colors cursor-pointer"
         title="Click to change appointment status"
@@ -106,10 +115,12 @@ export default function AppointmentRowActions({
 
       {isOpen && (
         <div
-          className="absolute right-0 sm:left-0 top-full mt-1.5 w-48 rounded-xl shadow-xl z-50 overflow-hidden border border-line py-1"
+          className={`absolute right-0 sm:left-0 ${
+            openUpward ? "bottom-full mb-1.5" : "top-full mt-1.5"
+          } w-52 rounded-xl shadow-2xl z-50 overflow-hidden border border-line-strong py-1 bg-surface`}
           style={{
-            background: "var(--surface)",
-            backdropFilter: "blur(20px)",
+            backgroundColor: "var(--surface)",
+            boxShadow: "0 10px 38px -10px rgba(0, 0, 0, 0.5), 0 10px 20px -15px rgba(0, 0, 0, 0.3)",
           }}
         >
           <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-faint border-b border-line">
@@ -125,7 +136,7 @@ export default function AppointmentRowActions({
                 className={`w-full text-left px-3 py-2 text-xs font-semibold flex items-center justify-between transition-colors ${
                   isCurrent
                     ? "bg-brand/10 text-brand"
-                    : "hover:bg-canvas text-ink"
+                    : "hover:bg-raised text-ink"
                 }`}
               >
                 <div className="flex items-center gap-2">

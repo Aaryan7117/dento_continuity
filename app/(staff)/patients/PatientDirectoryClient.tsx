@@ -216,11 +216,11 @@ export default function PatientDirectoryClient({
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="bg-transparent outline-none cursor-pointer text-ink"
+                className="bg-transparent outline-none cursor-pointer text-ink font-semibold"
               >
-                <option value="name-asc">Name (A → Z)</option>
-                <option value="name-desc">Name (Z → A)</option>
-                <option value="dob">Date of Birth</option>
+                <option value="name-asc" className="bg-surface text-ink">Name (A → Z)</option>
+                <option value="name-desc" className="bg-surface text-ink">Name (Z → A)</option>
+                <option value="dob" className="bg-surface text-ink">Date of Birth</option>
               </select>
             </div>
           </>

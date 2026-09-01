@@ -32,6 +32,7 @@ export default function FrontDeskScheduleClient({
     time?: string;
     label?: string;
   }>({});
+  const [activeActionId, setActiveActionId] = useState<string | null>(null);
 
   function handleStatusChanged(
     newStatus: string,
@@ -182,12 +183,14 @@ export default function FrontDeskScheduleClient({
                   </td>
                 </tr>
               )}
-              {schedule.map((apt) => (
+              {schedule.map((apt, index) => (
                 <tr
                   key={apt.id}
                   className="stagger-row"
                   style={{
                     borderBottom: "1px solid var(--line)",
+                    position: "relative",
+                    zIndex: activeActionId === apt.id ? 40 : 1,
                     background:
                       apt.status === "NO_SHOW"
                         ? "rgb(var(--tone-red) / 0.03)"
@@ -241,7 +244,9 @@ export default function FrontDeskScheduleClient({
                         currentStatus={apt.status}
                         patientName={`${apt.patient.firstName} ${apt.patient.lastName}`}
                         startsAt={apt.startsAt}
+                        openUpward={index >= schedule.length - 2 && schedule.length > 2}
                         onStatusChanged={handleStatusChanged}
+                        onOpenChange={(open) => setActiveActionId(open ? apt.id : null)}
                       />
                       {apt.pendingRecommendationId && (
                         <span
