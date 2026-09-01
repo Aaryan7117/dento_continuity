@@ -14,7 +14,8 @@
     "electron:pack": "npm run build && node scripts/resolve-symlinks.cjs && electron-builder --dir",
     "electron:build:win": "npm run build && node scripts/resolve-symlinks.cjs && electron-builder --win",
     "electron:build:mac": "npm run build && node scripts/resolve-symlinks.cjs && electron-builder --mac",
-    "electron:build:all": "npm run build && node scripts/resolve-symlinks.cjs && electron-builder --win --mac"
+    "electron:build:all": "npm run build && node scripts/resolve-symlinks.cjs && electron-builder --win --mac",
+    "mcp": "tsx mcp/server.ts"
   },
   "build": {
     "appId": "com.dentocontinuity.studio",
@@ -41,16 +42,23 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },
     "mac": {
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "category": "public.app-category.medical"
     },
     "nsis": {
@@ -61,11 +69,13 @@
     }
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@number-flow/react": "^0.6.2",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
+    "dotenv": "^17.4.2",
     "framer-motion": "^13.1.0",
     "lucide-react": "^1.31.0",
     "next": "16.3.0",
