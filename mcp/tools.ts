@@ -3,7 +3,7 @@ import { FindingTypeSchema, ToothSurfaceSchema, AppointmentStatusSchema, Message
 import { getDentistActor } from "../lib/actors";
 import { approveRecommendation as approveRec, dismissRecommendation as dismissRec } from "../lib/recommendations";
 import { createToothFinding } from "../lib/tooth-findings";
-import { createAppointment } from "../lib/appointments";
+import { bookAppointment, conflictMessage } from "../lib/appointments";
 import { getRecoveryStats } from "../lib/recovery";
 import { getChairUtilization as queryChairUtilization } from "../lib/queries";
 
@@ -566,7 +566,7 @@ export async function handleToolCall(name: string, args: any) {
 
     case "book_appointment": {
       const { patientId, startsAt, endsAt, reason, providerId, estimatedValue } = args;
-      const created = await createAppointment({
+      const result = await bookAppointment({
         patientId,
         providerId,
         startsAt: new Date(startsAt).toISOString(),
@@ -574,6 +574,17 @@ export async function handleToolCall(name: string, args: any) {
         reason,
         estimatedValue,
       });
+      if (!result.ok) {
+        return {
+          success: false,
+          message:
+            result.reason === "conflict"
+              ? conflictMessage(result.conflict)
+              : "The end time must be after the start time.",
+          ...(result.reason === "conflict" ? { conflict: result.conflict } : {}),
+        };
+      }
+      const created = result.appointment;
 
       return {
         success: true,

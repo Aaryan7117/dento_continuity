@@ -1,4 +1,21 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env from project root regardless of child process cwd
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+if (!process.env.DENTO_CLINIC_ID) {
+  console.error("DENTO_CLINIC_ID is not set. The MCP server serves exactly one clinic; put its id in .env.");
+  process.exit(1);
+}
+if (!process.env.DIRECT_DATABASE_URL) {
+  console.error("DIRECT_DATABASE_URL is not set. Add it to the project's .env file.");
+  process.exit(1);
+}
+
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
