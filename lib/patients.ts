@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { currentClinicId } from "@/lib/tenant";
 import { recordAudit } from "@/lib/audit";
 import { getFrontDeskActor } from "@/lib/actors";
 import { toPatient } from "@/lib/serializers";
@@ -52,6 +53,7 @@ export async function createPatient(
 ): Promise<Patient> {
   const row = await prisma.patient.create({
     data: {
+      clinicId: await currentClinicId(),
       firstName: input.firstName,
       lastName: input.lastName,
       dateOfBirth: new Date(input.dateOfBirth),

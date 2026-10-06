@@ -1,7 +1,5 @@
 import "dotenv/config";
-import { PrismaPg } from "@prisma/adapter-pg";
 import {
-  PrismaClient,
   Role,
   AppointmentStatus,
   FindingType,
@@ -17,9 +15,12 @@ import type { AuditAction } from "../lib/audit";
 
 const auditAction = (action: AuditAction) => action;
 
-const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: process.env.DIRECT_DATABASE_URL }),
-});
+import { prisma, prismaUnscoped } from "../lib/db";
+import { runAsClinic } from "../lib/tenant";
+import { hashPassword } from "../lib/auth";
+
+/// The seed targets one clinic; it is created if missing so a fresh database works.
+const SEED_CLINIC = { slug: "demo", name: "DENTO Demo Clinic" };
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -84,17 +85,21 @@ const DEMO_PATIENT = {
   address: "17 Bourdillon Road, Ikoyi, Lagos",
 };
 
-async function main() {
+/// Every seeded staff account gets the same dev password (override with SEED_PASSWORD).
+const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "dento-demo-2026";
+
+async function main(clinicId: string) {
+  const passwordHash = await hashPassword(SEED_PASSWORD);
   await reset();
 
   const drAdeleke = await prisma.user.create({
-    data: { name: "Dr. Simisola Adeleke", email: "s.adeleke@dentocontinuity.demo", role: Role.DENTIST },
+    data: { clinicId, name: "Dr. Simisola Adeleke", email: "s.adeleke@dentocontinuity.demo", role: Role.DENTIST, passwordHash },
   });
   const drNnamdi = await prisma.user.create({
-    data: { name: "Dr. Nnamdi Chukwu", email: "n.chukwu@dentocontinuity.demo", role: Role.DENTIST },
+    data: { clinicId, name: "Dr. Nnamdi Chukwu", email: "n.chukwu@dentocontinuity.demo", role: Role.DENTIST, passwordHash },
   });
   const frontDesk = await prisma.user.create({
-    data: { name: "Blessing Adeniyi", email: "front.desk@dentocontinuity.demo", role: Role.FRONT_DESK },
+    data: { clinicId, name: "Blessing Adeniyi", email: "front.desk@dentocontinuity.demo", role: Role.FRONT_DESK, passwordHash },
   });
 
   const dentists = [drAdeleke, drNnamdi];
@@ -108,7 +113,7 @@ async function main() {
     const consented = i % 7 !== 0;
     patients.push(
       await prisma.patient.create({
-        data: {
+        data: { clinicId,
           ...p,
           consentGiven: consented,
           consentAt: consented ? at(-200 + i * 6, 9, 15) : null,
@@ -124,7 +129,7 @@ async function main() {
     const visitDay = -150 + i * 8;
 
     const appointment = await prisma.appointment.create({
-      data: {
+      data: { clinicId,
         patientId: patient.id,
         providerId: provider.id,
         startsAt: at(visitDay, 10 + (i % 6)),
@@ -136,7 +141,7 @@ async function main() {
     });
 
     const encounter = await prisma.encounter.create({
-      data: {
+      data: { clinicId,
         patientId: patient.id,
         appointmentId: appointment.id,
         providerId: provider.id,
@@ -146,7 +151,7 @@ async function main() {
     });
 
     await prisma.note.create({
-      data: {
+      data: { clinicId,
         encounterId: encounter.id,
         authorId: provider.id,
         body:
@@ -171,7 +176,7 @@ async function main() {
   for (let i = 0; i < patients.length; i += 2) {
     const spread = findingSpread[(i / 2) % findingSpread.length];
     await prisma.toothFinding.create({
-      data: {
+      data: { clinicId,
         patientId: patients[i].id,
         chartedById: dentists[i % 2].id,
         toothCode: spread.tooth,
@@ -195,7 +200,7 @@ async function main() {
 
   for (const spec of planSpecs) {
     const plan = await prisma.treatmentPlan.create({
-      data: {
+      data: { clinicId,
         patientId: patients[spec.idx].id,
         dentistId: dentists[spec.idx % 2].id,
         title: spec.title,
@@ -209,7 +214,7 @@ async function main() {
     });
 
     await prisma.recall.create({
-      data: {
+      data: { clinicId,
         patientId: patients[spec.idx].id,
         treatmentPlanId: plan.id,
         dueAt: at(20 + spec.idx * 5, 9),
@@ -232,7 +237,7 @@ async function main() {
 
   for (const u of upcoming) {
     await prisma.appointment.create({
-      data: {
+      data: { clinicId,
         patientId: patients[u.idx].id,
         providerId: dentists[u.idx % 2].id,
         startsAt: at(u.day, u.hour),
@@ -254,7 +259,7 @@ async function main() {
     const patient = patients[past.idx];
 
     const missed = await prisma.appointment.create({
-      data: {
+      data: { clinicId,
         patientId: patient.id,
         providerId: drAdeleke.id,
         startsAt: at(past.missedDay, 10),
@@ -266,7 +271,7 @@ async function main() {
     });
 
     await prisma.appointment.create({
-      data: {
+      data: { clinicId,
         patientId: patient.id,
         providerId: drAdeleke.id,
         startsAt: at(past.rebookedDay, 10),
@@ -279,7 +284,7 @@ async function main() {
     });
 
     const rec = await prisma.recommendation.create({
-      data: {
+      data: { clinicId,
         patientId: patient.id,
         appointmentId: missed.id,
         status: RecommendationStatus.SENT,
@@ -293,7 +298,7 @@ async function main() {
     });
 
     await prisma.message.create({
-      data: {
+      data: { clinicId,
         patientId: patient.id,
         recommendationId: rec.id,
         sentById: frontDesk.id,
@@ -309,7 +314,7 @@ async function main() {
   // The demo case: Marcus Delgado, mid-treatment, no-showed this morning.
   // ---------------------------------------------------------------------------
   const marcus = await prisma.patient.create({
-    data: { ...DEMO_PATIENT, consentGiven: true, consentAt: at(-730, 9, 20) },
+    data: { clinicId, ...DEMO_PATIENT, consentGiven: true, consentAt: at(-730, 9, 20) },
   });
 
   const marcusHistory = [
@@ -322,7 +327,7 @@ async function main() {
 
   for (const visit of marcusHistory) {
     const appointment = await prisma.appointment.create({
-      data: {
+      data: { clinicId,
         patientId: marcus.id,
         providerId: drAdeleke.id,
         startsAt: at(visit.day, 9, 30),
@@ -334,7 +339,7 @@ async function main() {
     });
 
     const encounter = await prisma.encounter.create({
-      data: {
+      data: { clinicId,
         patientId: marcus.id,
         appointmentId: appointment.id,
         providerId: drAdeleke.id,
@@ -344,7 +349,7 @@ async function main() {
     });
 
     await prisma.note.create({
-      data: {
+      data: { clinicId,
         encounterId: encounter.id,
         authorId: drAdeleke.id,
         body: visit.note,
@@ -362,7 +367,7 @@ async function main() {
     { tooth: 27, finding: FindingType.CARIES, surfaces: [ToothSurface.MESIAL], note: "Early lesion, monitoring." },
   ]) {
     await prisma.toothFinding.create({
-      data: {
+      data: { clinicId,
         patientId: marcus.id,
         chartedById: drAdeleke.id,
         toothCode: f.tooth,
@@ -375,7 +380,7 @@ async function main() {
   }
 
   await prisma.image.create({
-    data: {
+    data: { clinicId,
       patientId: marcus.id,
       uploadedById: drAdeleke.id,
       kind: ImageKind.PANORAMIC,
@@ -387,7 +392,7 @@ async function main() {
   });
 
   const marcusPlan = await prisma.treatmentPlan.create({
-    data: {
+    data: { clinicId,
       patientId: marcus.id,
       dentistId: drAdeleke.id,
       title: "Porcelain crown — upper left first molar (26)",
@@ -403,7 +408,7 @@ async function main() {
   });
 
   await prisma.recall.create({
-    data: {
+    data: { clinicId,
       patientId: marcus.id,
       treatmentPlanId: marcusPlan.id,
       dueAt: at(4, 9),
@@ -416,7 +421,7 @@ async function main() {
     { day: -1, body: "Reminder: your crown fitting is tomorrow at 9:30am. Please arrive 5 minutes early." },
   ]) {
     await prisma.message.create({
-      data: {
+      data: { clinicId,
         patientId: marcus.id,
         sentById: frontDesk.id,
         channel: MessageChannel.SMS,
@@ -429,7 +434,7 @@ async function main() {
 
   // The flagged no-show on today's schedule.
   const missedToday = await prisma.appointment.create({
-    data: {
+    data: { clinicId,
       patientId: marcus.id,
       providerId: drAdeleke.id,
       startsAt: at(0, 9, 30),
@@ -442,7 +447,7 @@ async function main() {
 
   // What the Retention Agent has already drafted, awaiting front-desk approval.
   const pending = await prisma.recommendation.create({
-    data: {
+    data: { clinicId,
       patientId: marcus.id,
       appointmentId: missedToday.id,
       status: RecommendationStatus.PENDING,
@@ -464,6 +469,7 @@ async function main() {
   await prisma.auditEvent.createMany({
     data: [
       {
+        clinicId,
         actorId: frontDesk.id,
         actorRole: Role.FRONT_DESK,
         action: auditAction("appointment.no_show"),
@@ -473,6 +479,7 @@ async function main() {
         createdAt: at(0, 10, 35),
       },
       {
+        clinicId,
         actorId: null,
         actorRole: null,
         action: auditAction("recommendation.generated"),
@@ -490,6 +497,7 @@ async function main() {
   await prisma.waitlistEntry.createMany({
     data: [
       {
+        clinicId,
         patientId: patients[0].id, // Amara Okonkwo
         preferredDays: "Monday,Wednesday,Friday",
         preferredTime: "morning",
@@ -499,6 +507,7 @@ async function main() {
         addedAt: at(-4, 9),
       },
       {
+        clinicId,
         patientId: patients[2].id, // Chiamaka Eze
         preferredDays: "Tuesday,Thursday",
         preferredTime: "morning",
@@ -508,6 +517,7 @@ async function main() {
         addedAt: at(-6, 14),
       },
       {
+        clinicId,
         patientId: patients[4].id, // Zainab Bello
         preferredDays: "any",
         preferredTime: "any",
@@ -517,6 +527,7 @@ async function main() {
         addedAt: at(-2, 11),
       },
       {
+        clinicId,
         patientId: patients[6].id, // Folake Adebayo
         preferredDays: "Monday,Tuesday,Thursday",
         preferredTime: "afternoon",
@@ -526,6 +537,7 @@ async function main() {
         addedAt: at(-8, 16),
       },
       {
+        clinicId,
         patientId: patients[8].id, // Ngozi Okafor
         preferredDays: "Friday,Saturday",
         preferredTime: "morning",
@@ -558,7 +570,16 @@ async function main() {
   console.log(`Pending recommendation: ${pending.id}`);
 }
 
-main()
+async function run() {
+  const clinic = await prismaUnscoped.clinic.upsert({
+    where: { slug: SEED_CLINIC.slug },
+    update: {},
+    create: SEED_CLINIC,
+  });
+  return runAsClinic(clinic.id, () => main(clinic.id));
+}
+
+run()
   .catch((e) => {
     console.error(e);
     process.exit(1);

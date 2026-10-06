@@ -85,6 +85,8 @@ const appointmentFields = z.object({
   estimatedValue: z.number().nonnegative().nullish(),
   status: z.enum(AppointmentStatus).optional(),
   rebookedFromId: uuid.nullish(),
+  chairId: uuid.nullish(),
+  walkIn: z.boolean().optional(),
 });
 
 const endsAfterStart = (

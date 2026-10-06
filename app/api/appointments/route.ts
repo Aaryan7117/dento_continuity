@@ -1,6 +1,10 @@
 import { NextRequest } from "next/server";
-import { handle, ok, parseBody, parseQuery } from "@/lib/api";
-import { createAppointment, listAppointments } from "@/lib/appointments";
+import { fail, handle, ok, parseBody, parseQuery } from "@/lib/api";
+import {
+  bookAppointment,
+  conflictMessage,
+  listAppointments,
+} from "@/lib/appointments";
 import {
   createAppointmentSchema,
   listAppointmentsQuerySchema,
@@ -23,6 +27,15 @@ export async function POST(request: NextRequest) {
     const body = await parseBody(request, createAppointmentSchema);
     if (!body.ok) return body.response;
 
-    return ok(await createAppointment(body.data), 201);
+    const result = await bookAppointment(body.data);
+    if (!result.ok) {
+      return result.reason === "conflict"
+        ? fail(conflictMessage(result.conflict), 409)
+        : fail("Validation failed", 422, {
+            endsAt: ["endsAt must be after startsAt"],
+          });
+    }
+
+    return ok(result.appointment, 201);
   });
 }

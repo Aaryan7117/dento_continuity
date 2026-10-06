@@ -161,12 +161,20 @@ export interface Appointment extends Timestamps {
   estimatedValue: number | null;
   /** Set when this booking replaces an earlier missed appointment. */
   rebookedFromId: UUID | null;
+  chairId: UUID | null;
+  checkedInAt: ISODateTime | null;
+  inChairAt: ISODateTime | null;
+  completedAt: ISODateTime | null;
+  cancellationReason: string | null;
+  noShowReason: string | null;
+  walkIn: boolean;
 }
 
 /** Row shape for the front-desk schedule. */
 export interface AppointmentWithPatient extends Appointment {
   patient: PatientSummary;
   provider: UserSummary | null;
+  chair: { id: UUID; name: string } | null;
   /** Present when the Retention Agent has drafted something for this no-show. */
   pendingRecommendationId: UUID | null;
 }
@@ -191,6 +199,8 @@ export interface CreateAppointmentRequest {
   estimatedValue?: number | null;
   status?: AppointmentStatus;
   rebookedFromId?: UUID | null;
+  chairId?: UUID | null;
+  walkIn?: boolean;
 }
 
 export type UpdateAppointmentRequest = Partial<CreateAppointmentRequest>;
@@ -703,6 +713,8 @@ export interface PortalAppointment {
   status: AppointmentStatus;
   reason: string | null;
   providerName: string | null;
+  /** Set when a missed or cancelled visit already has a replacement booking. */
+  rebookedToId: UUID | null;
 }
 
 export interface PortalTreatmentPlan {

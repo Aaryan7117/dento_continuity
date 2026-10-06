@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { currentClinicId } from "@/lib/tenant";
 import { recordAudit } from "@/lib/audit";
 import { getDentistActor } from "@/lib/actors";
 import { toEncounter } from "@/lib/serializers";
@@ -44,6 +45,7 @@ export async function createEncounter(
 ): Promise<Encounter> {
   const row = await prisma.encounter.create({
     data: {
+      clinicId: await currentClinicId(),
       patientId: input.patientId,
       appointmentId: input.appointmentId ?? null,
       providerId: input.providerId ?? null,

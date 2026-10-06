@@ -1,18 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import {
-  CalendarClock,
-  Clock,
-  Sparkles,
-  Plus,
-  Filter,
-  X,
-  Zap,
-} from "lucide-react";
+import { CalendarClock, Clock, Sparkles, Plus, Filter, X, Zap, Armchair } from "lucide-react";
 import type { AppointmentWithPatient } from "@/lib/contract";
 import AppointmentRowActions from "@/app/components/AppointmentRowActions";
+import { waitingMinutes } from "@/lib/schedule-rules";
 import SmartWaitlist from "@/app/components/SmartWaitlist";
 
 type Props = {
@@ -33,6 +26,12 @@ export default function FrontDeskScheduleClient({
     label?: string;
   }>({});
   const [activeActionId, setActiveActionId] = useState<string | null>(null);
+  // Re-renders the waiting-time labels once a minute.
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(t);
+  }, []);
 
   function handleStatusChanged(
     newStatus: string,
@@ -105,7 +104,7 @@ export default function FrontDeskScheduleClient({
           </button>
 
           <Link
-            href="/appointments/new"
+            href="/appointments/new?walkin=1"
             className="inline-flex justify-center items-center gap-1.5 px-4 py-2 text-white rounded-xl text-xs font-semibold shadow-sm"
             style={{
               background: "var(--grad-brand)",
@@ -218,6 +217,11 @@ export default function FrontDeskScheduleClient({
                     >
                       {apt.patient.firstName} {apt.patient.lastName}
                     </Link>
+                    {apt.walkIn && (
+                      <span className="ml-2 text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md" style={{ background: "var(--raised)", color: "var(--ink-faint)" }}>
+                        Walk-in
+                      </span>
+                    )}
                     <div
                       className="text-xs mt-0.5"
                       style={{ color: "var(--ink-faint)" }}
@@ -236,6 +240,11 @@ export default function FrontDeskScheduleClient({
                     style={{ color: "var(--ink-muted)" }}
                   >
                     {apt.provider?.name ?? "—"}
+                    {apt.chair && (
+                      <div className="text-xs mt-0.5 flex items-center gap-1" style={{ color: "var(--ink-faint)" }}>
+                        <Armchair className="w-3 h-3" /> {apt.chair.name}
+                      </div>
+                    )}
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -243,11 +252,25 @@ export default function FrontDeskScheduleClient({
                         appointmentId={apt.id}
                         currentStatus={apt.status}
                         patientName={`${apt.patient.firstName} ${apt.patient.lastName}`}
+                        patientId={apt.patientId}
                         startsAt={apt.startsAt}
+                        endsAt={apt.endsAt}
                         openUpward={index >= schedule.length - 2 && schedule.length > 2}
                         onStatusChanged={handleStatusChanged}
                         onOpenChange={(open) => setActiveActionId(open ? apt.id : null)}
                       />
+                      {waitingMinutes(apt, now) !== null && (
+                        <span
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide"
+                          title={apt.status === "CHECKED_IN" ? "Waiting since arrival" : "Waited before the chair"}
+                          style={{
+                            background: apt.status === "CHECKED_IN" && waitingMinutes(apt, now)! >= 20 ? "rgb(var(--tone-red) / 0.1)" : "rgb(var(--tone-sky) / 0.1)",
+                            color: apt.status === "CHECKED_IN" && waitingMinutes(apt, now)! >= 20 ? "var(--tone-red-ink)" : "var(--tone-sky-ink)",
+                          }}
+                        >
+                          <Clock className="w-3 h-3" /> {waitingMinutes(apt, now)} min
+                        </span>
+                      )}
                       {apt.pendingRecommendationId && (
                         <span
                           className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide"

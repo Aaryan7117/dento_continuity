@@ -18,6 +18,8 @@ const TONES: Record<string, Tone> = {
   // Appointment
   SCHEDULED: "sky",
   CONFIRMED: "indigo",
+  CHECKED_IN: "amber",
+  IN_CHAIR: "indigo",
   COMPLETED: "emerald",
   CANCELLED: "neutral",
   NO_SHOW: "red",

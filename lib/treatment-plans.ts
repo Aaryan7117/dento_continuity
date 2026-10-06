@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { currentClinicId } from "@/lib/tenant";
 import { recordAudit } from "@/lib/audit";
 import { getDentistActor } from "@/lib/actors";
 import { toRecall, toTreatmentPlan } from "@/lib/serializers";
@@ -91,6 +92,7 @@ export async function createTreatmentPlan(
 
   const row = await prisma.treatmentPlan.create({
     data: {
+      clinicId: await currentClinicId(),
       patientId: input.patientId,
       dentistId: input.dentistId ?? actor.id,
       title: input.title,

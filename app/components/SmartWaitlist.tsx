@@ -6,6 +6,7 @@ import {
   Calendar, Loader2, CheckCircle2, Plus,
 } from "lucide-react";
 import { toast } from "sonner";
+import AddToWaitlistForm from "./AddToWaitlistForm";
 
 type WaitlistCandidate = {
   id: string;
@@ -48,6 +49,7 @@ export default function SmartWaitlist({
   const [candidates, setCandidates] = useState<WaitlistCandidate[]>([]);
   const [loading, setLoading] = useState(false);
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (isOpen) {
@@ -64,7 +66,7 @@ export default function SmartWaitlist({
         })
         .catch(() => setLoading(false));
     }
-  }, [isOpen, slotDay, slotTime]);
+  }, [isOpen, slotDay, slotTime, reloadKey]);
 
   async function handleSendOffer(candidate: WaitlistCandidate) {
     setSendingId(candidate.id);
@@ -140,7 +142,7 @@ export default function SmartWaitlist({
                 No patients on the waitlist
               </p>
               <p className="text-xs mt-1" style={{ color: "var(--ink-faint)" }}>
-                Patients can be added from their chart or during booking.
+                Add a patient below to offer them the next free slot.
               </p>
             </div>
           ) : (
@@ -258,6 +260,10 @@ export default function SmartWaitlist({
               ))}
             </>
           )}
+        </div>
+
+        <div className="p-5" style={{ borderTop: "1px solid var(--line)" }}>
+          <AddToWaitlistForm onAdded={() => setReloadKey((k) => k + 1)} />
         </div>
       </div>
 

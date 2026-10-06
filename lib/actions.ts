@@ -12,12 +12,17 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod/v4";
 import { prisma } from "@/lib/db";
-import { getDentistActor } from "@/lib/actors";
+import { currentClinicId } from "@/lib/tenant";
+import { getCurrentActor, getDentistActor } from "@/lib/actors";
+import { issuePatientLinkUrl } from "@/lib/patient-links";
+import { recordAudit } from "@/lib/audit";
 import {
-  cancelAppointment,
-  markNoShow,
-  updateAppointment,
+  bookAppointment,
+  conflictMessage,
+  rescheduleAppointment as rescheduleAppointmentRecord,
+  transitionAppointment,
 } from "@/lib/appointments";
+import { STATUS_LABEL } from "@/lib/schedule-rules";
 import {
   approveRecommendation as approveRecommendationRecord,
   dismissRecommendation as dismissRecommendationRecord,
@@ -30,7 +35,7 @@ import {
   transitionTreatmentPlan as transitionTreatmentPlanRecord,
 } from "@/lib/treatment-plans";
 import { createRecall as createRecallRecord } from "@/lib/recalls";
-import { FindingType, ToothSurface } from "@/app/generated/prisma/enums";
+import { AppointmentStatus, FindingType, ToothSurface } from "@/app/generated/prisma/enums";
 import type { ApprovalFailure } from "@/lib/recommendations";
 import type { ApiResult, ToothFinding } from "@/lib/contract";
 
@@ -301,50 +306,6 @@ export async function createRecall(
 }
 
 // ---------------------------------------------------------------------------
-// Update appointment status
-// ---------------------------------------------------------------------------
-
-const updateAppointmentStatusSchema = z.object({
-  id: z.uuid(),
-  status: z.enum(["SCHEDULED", "CONFIRMED", "COMPLETED", "CANCELLED", "NO_SHOW"]),
-});
-
-/**
- * Cancelling and no-showing are transitions with their own rules and their own
- * audit action, so they route to the dedicated service calls rather than
- * writing the status field directly.
- */
-export async function updateAppointmentStatus(
-  input: z.input<typeof updateAppointmentStatusSchema>
-): Promise<ApiResult<{ appointmentId: string }>> {
-  const parsed = updateAppointmentStatusSchema.safeParse(input);
-  if (!parsed.success) return invalid();
-
-  const { id, status } = parsed.data;
-
-  if (status === "NO_SHOW") {
-    const result = await markNoShow(id);
-    if (!result) return invalid("Not found");
-  } else if (status === "CANCELLED") {
-    const result = await cancelAppointment(id);
-    if (!result.ok) {
-      return invalid(
-        result.reason === "notFound"
-          ? "Not found"
-          : "Only scheduled or confirmed appointments can be cancelled"
-      );
-    }
-  } else {
-    const result = await updateAppointment(id, { status });
-    if (!result.ok) return invalid("Not found");
-  }
-
-  revalidatePath("/front-desk");
-  revalidatePath("/dashboard");
-  return { ok: true, data: { appointmentId: id } };
-}
-
-// ---------------------------------------------------------------------------
 // Create Patient
 // ---------------------------------------------------------------------------
 
@@ -368,6 +329,7 @@ export async function createPatient(
 
   const patient = await prisma.patient.create({
     data: {
+      clinicId: await currentClinicId(),
       firstName,
       lastName,
       dateOfBirth: new Date(dateOfBirth),
@@ -388,11 +350,14 @@ export async function createPatient(
 // ---------------------------------------------------------------------------
 
 const createAppointmentSchema = z.object({
-  patientId: z.string().uuid(),
-  providerId: z.string().uuid().optional(),
-  startsAt: z.string(),
-  endsAt: z.string(),
-  reason: z.string().optional(),
+  patientId: z.uuid(),
+  providerId: z.uuid().optional(),
+  chairId: z.uuid().optional(),
+  startsAt: z.iso.datetime(),
+  endsAt: z.iso.datetime(),
+  reason: z.string().trim().max(500).optional(),
+  /** Patient is already at the desk: booked as arrived, waiting time starts now. */
+  walkIn: z.boolean().optional(),
 });
 
 export async function createAppointment(
@@ -401,25 +366,66 @@ export async function createAppointment(
   const parsed = createAppointmentSchema.safeParse(input);
   if (!parsed.success) return invalid();
 
-  const { patientId, providerId, startsAt, endsAt, reason } = parsed.data;
+  const { patientId, providerId, chairId, startsAt, endsAt, reason, walkIn } = parsed.data;
 
-  const apt = await prisma.appointment.create({
-    data: {
-      patientId,
-      providerId: providerId || null,
-      startsAt: new Date(startsAt),
-      endsAt: new Date(endsAt),
-      reason,
-      status: "SCHEDULED",
-    },
+  const result = await bookAppointment({
+    patientId,
+    providerId: providerId || null,
+    chairId: chairId || null,
+    startsAt,
+    endsAt,
+    reason,
+    walkIn: walkIn ?? false,
+    status: walkIn ? "CHECKED_IN" : "SCHEDULED",
   });
+  if (!result.ok) {
+    return invalid(
+      result.reason === "conflict"
+        ? conflictMessage(result.conflict)
+        : "The end time must be after the start time."
+    );
+  }
 
-  revalidatePath("/front-desk");
-  revalidatePath("/dashboard");
-  revalidatePath("/calendar");
+  revalidateSchedule();
   revalidatePath(`/patients/${patientId}`);
-  
-  return { ok: true, data: { appointmentId: apt.id } };
+
+  return { ok: true, data: { appointmentId: result.appointment.id } };
+}
+
+// ---------------------------------------------------------------------------
+// Reschedule Appointment
+// ---------------------------------------------------------------------------
+
+const rescheduleAppointmentSchema = z.object({
+  id: z.uuid(),
+  startsAt: z.iso.datetime(),
+  endsAt: z.iso.datetime(),
+});
+
+export async function rescheduleAppointment(
+  input: z.input<typeof rescheduleAppointmentSchema>
+): Promise<ApiResult<{ appointmentId: string }>> {
+  const parsed = rescheduleAppointmentSchema.safeParse(input);
+  if (!parsed.success) return invalid();
+
+  const { id, startsAt, endsAt } = parsed.data;
+  const result = await rescheduleAppointmentRecord(id, { startsAt, endsAt });
+  if (!result.ok) {
+    switch (result.reason) {
+      case "conflict":
+        return invalid(conflictMessage(result.conflict));
+      case "notFound":
+        return invalid("Appointment not found.");
+      case "badStatus":
+        return invalid("Only scheduled or confirmed appointments can be moved.");
+      case "badWindow":
+        return invalid("The end time must be after the start time.");
+    }
+  }
+
+  revalidateSchedule();
+  revalidatePath(`/patients/${result.appointment.patientId}`);
+  return { ok: true, data: { appointmentId: id } };
 }
 
 // ---------------------------------------------------------------------------
@@ -427,33 +433,80 @@ export async function createAppointment(
 // ---------------------------------------------------------------------------
 
 const changeAppointmentStatusSchema = z.object({
-  id: z.string().uuid(),
-  status: z.enum(["SCHEDULED", "CONFIRMED", "COMPLETED", "CANCELLED", "NO_SHOW"]),
+  id: z.uuid(),
+  status: z.enum(AppointmentStatus),
+  reason: z.string().trim().max(300).optional(),
 });
 
+/** One entry point for every status move on the schedule. */
 export async function changeAppointmentStatus(
   input: z.input<typeof changeAppointmentStatusSchema>
 ): Promise<ApiResult<{ appointmentId: string }>> {
   const parsed = changeAppointmentStatusSchema.safeParse(input);
   if (!parsed.success) return invalid();
 
-  const { id, status } = parsed.data;
-
-  if (status === "NO_SHOW") {
-    await markNoShow(id);
-  } else if (status === "CANCELLED") {
-    await cancelAppointment(id);
-  } else {
-    await updateAppointment(id, { status });
+  const { id, status, reason } = parsed.data;
+  const result = await transitionAppointment(id, status, reason);
+  if (!result.ok) {
+    return invalid(
+      result.reason === "notFound"
+        ? "Appointment not found."
+        : `This appointment cannot move to "${STATUS_LABEL[status]}" from its current state.`
+    );
   }
 
-  revalidatePath("/front-desk");
-  revalidatePath("/dashboard");
-  revalidatePath("/calendar");
+  revalidateSchedule();
+  revalidatePath(`/patients/${result.appointment.patientId}`);
   return { ok: true, data: { appointmentId: id } };
 }
 
 // ---------------------------------------------------------------------------
+// Patient link
+// ---------------------------------------------------------------------------
+
+const patientLinkSchema = z.object({
+  patientId: z.uuid(),
+  appointmentId: z.uuid().optional(),
+});
+
+/** A fresh self-action link for staff to paste into a message or read out. */
+export async function createPatientLink(
+  input: z.input<typeof patientLinkSchema>
+): Promise<ApiResult<{ url: string }>> {
+  const parsed = patientLinkSchema.safeParse(input);
+  if (!parsed.success) return invalid();
+
+  const patient = await prisma.patient.findUnique({
+    where: { id: parsed.data.patientId },
+    select: { id: true, clinicId: true },
+  });
+  if (!patient) return invalid("Patient not found.");
+
+  const url = await issuePatientLinkUrl({
+    patientId: patient.id,
+    clinicId: patient.clinicId,
+    appointmentId: parsed.data.appointmentId ?? null,
+  });
+  await recordAudit({
+    actor: await getCurrentActor(),
+    action: "patient_link.issued",
+    entityType: "Patient",
+    entityId: patient.id,
+    metadata: parsed.data.appointmentId ? { appointmentId: parsed.data.appointmentId } : {},
+  });
+  return { ok: true, data: { url } };
+}
+
+/** Older name kept for existing callers. */
+export const updateAppointmentStatus = changeAppointmentStatus;
+
+// ---------------------------------------------------------------------------
+
+function revalidateSchedule() {
+  revalidatePath("/front-desk");
+  revalidatePath("/dashboard");
+  revalidatePath("/calendar");
+}
 
 /** Notes hang off an encounter, so the page to refresh is the patient's. */
 async function revalidatePatientOfEncounter(encounterId: string) {

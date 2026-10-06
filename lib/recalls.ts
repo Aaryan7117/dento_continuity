@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { currentClinicId } from "@/lib/tenant";
 import { recordAudit } from "@/lib/audit";
 import { getFrontDeskActor } from "@/lib/actors";
 import { toRecall, toRecallWithPatient } from "@/lib/serializers";
@@ -54,6 +55,7 @@ export async function createRecall(
 ): Promise<Recall> {
   const row = await prisma.recall.create({
     data: {
+      clinicId: await currentClinicId(),
       patientId: input.patientId,
       treatmentPlanId: input.treatmentPlanId ?? null,
       dueAt: new Date(input.dueAt),

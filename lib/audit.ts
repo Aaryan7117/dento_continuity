@@ -7,6 +7,7 @@
  */
 
 import { prisma } from "@/lib/db";
+import { currentClinicId } from "@/lib/tenant";
 import type { Actor } from "@/lib/actors";
 import type { AuditEvent, AuditEventWithActor, Role } from "@/lib/contract";
 import type { z } from "zod/v4";
@@ -24,6 +25,16 @@ export type AuditAction =
   | "patient.consent_withdrawn"
   | "appointment.created"
   | "appointment.updated"
+  | "appointment.rescheduled"
+  | "appointment.confirmed"
+  | "appointment.checked_in"
+  | "appointment.in_chair"
+  | "appointment.completed"
+  | "appointment.rebooked_by_patient"
+  | "patient_link.issued"
+  | "clinic.updated"
+  | "chair.created"
+  | "chair.updated"
   | "appointment.cancelled"
   | "appointment.no_show"
   | "encounter.created"
@@ -45,7 +56,12 @@ export type AuditAction =
   | "recall.completed"
   | "recommendation.generated"
   | "recommendation.approved"
-  | "recommendation.dismissed";
+  | "recommendation.dismissed"
+  | "waitlist.added"
+  | "user.signed_in"
+  | "user.signed_out"
+  | "clinic.created"
+  | "user.created";
 
 type JsonValue =
   | string
@@ -79,6 +95,7 @@ export async function recordAudit({
   try {
     await prisma.auditEvent.create({
       data: {
+      clinicId: await currentClinicId(),
         actorId: actor.id,
         actorRole: actor.role,
         action,

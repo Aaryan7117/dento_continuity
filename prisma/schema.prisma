@@ -1,5 +1,6 @@
-// DENTO Continuity — demo schema.
-// Single-tenant by design: there is no Clinic model and no clinicId anywhere.
+// DENTO Continuity schema.
+// Multi-clinic: every tenant-owned row carries clinicId, and lib/db.ts scopes
+// queries to the signed-in clinic automatically.
 
 generator client {
   provider = "prisma-client"
@@ -11,13 +12,18 @@ datasource db {
 }
 
 enum Role {
+  OWNER
   DENTIST
   FRONT_DESK
 }
 
+/// Day-of-visit flow: SCHEDULED → CONFIRMED → CHECKED_IN → IN_CHAIR → COMPLETED.
+/// CANCELLED and NO_SHOW are terminal; waiting time is CHECKED_IN → IN_CHAIR.
 enum AppointmentStatus {
   SCHEDULED
   CONFIRMED
+  CHECKED_IN
+  IN_CHAIR
   COMPLETED
   CANCELLED
   NO_SHOW
@@ -85,40 +91,97 @@ enum MessageDirection {
   INBOUND
 }
 
-model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String
-  email     String   @unique
-  role      Role
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+/// One tenant. Timezone drives slot generation and reminder timing.
+model Clinic {
+  id                  String   @id @default(uuid()) @db.Uuid
+  name                String
+  slug                String   @unique
+  phone               String?
+  address             String?
+  timezone            String   @default("Asia/Kolkata")
+  /// Opening hours per weekday, e.g. { "mon": [["09:00","13:00"],["16:00","20:00"]] }; a missing day is closed.
+  openingHours        Json?
+  /// Grid the slot picker offers, in minutes.
+  slotMinutes         Int      @default(15)
+  defaultVisitMinutes Int      @default(30)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
+  users           User[]
+  chairs          Chair[]
+  patients        Patient[]
   appointments    Appointment[]
   encounters      Encounter[]
   notes           Note[]
   toothFindings   ToothFinding[]
   images          Image[]
   treatmentPlans  TreatmentPlan[]
-  approvals       Recommendation[]
+  recalls         Recall[]
+  recommendations Recommendation[]
   messages        Message[]
   auditEvents     AuditEvent[]
+  waitlistEntries WaitlistEntry[]
+
+  @@map("clinics")
+}
+
+/// A schedulable chair/operatory. Appointments may reserve one.
+model Chair {
+  id        String   @id @default(uuid()) @db.Uuid
+  clinicId  String   @db.Uuid
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clinic       Clinic        @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+
+  @@unique([clinicId, name])
+  @@map("chairs")
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  clinicId     String    @db.Uuid
+  name         String
+  email        String    @unique
+  role         Role
+  /// bcrypt hash; null means the account cannot sign in yet.
+  passwordHash String?
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  clinic         Clinic           @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  appointments   Appointment[]
+  encounters     Encounter[]
+  notes          Note[]
+  toothFindings  ToothFinding[]
+  images         Image[]
+  treatmentPlans TreatmentPlan[]
+  approvals      Recommendation[]
+  messages       Message[]
+  auditEvents    AuditEvent[]
 
   @@map("users")
 }
 
 model Patient {
-  id          String    @id @default(uuid()) @db.Uuid
-  firstName   String
-  lastName    String
-  dateOfBirth DateTime  @db.Date
-  phone       String
-  email       String?
-  address     String?
+  id           String    @id @default(uuid()) @db.Uuid
+  clinicId     String    @db.Uuid
+  firstName    String
+  lastName     String
+  dateOfBirth  DateTime  @db.Date
+  phone        String
+  email        String?
+  address      String?
   // Consent is intake bookkeeping, not a legal workflow.
-  consentGiven Boolean  @default(false)
+  consentGiven Boolean   @default(false)
   consentAt    DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   appointments    Appointment[]
   encounters      Encounter[]
@@ -130,25 +193,39 @@ model Patient {
   messages        Message[]
   waitlistEntries WaitlistEntry[]
 
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@index([clinicId])
   @@index([lastName, firstName])
   @@map("patients")
 }
 
 model Appointment {
-  id         String            @id @default(uuid()) @db.Uuid
-  patientId  String            @db.Uuid
-  providerId String?           @db.Uuid
-  startsAt   DateTime
-  endsAt     DateTime
-  status     AppointmentStatus @default(SCHEDULED)
-  reason     String?
+  id                 String            @id @default(uuid()) @db.Uuid
+  clinicId           String            @db.Uuid
+  patientId          String            @db.Uuid
+  providerId         String?           @db.Uuid
+  chairId            String?           @db.Uuid
+  startsAt           DateTime
+  endsAt             DateTime
+  status             AppointmentStatus @default(SCHEDULED)
+  reason             String?
+  /// Set by the day-of-visit transitions; waiting time = inChairAt − checkedInAt.
+  checkedInAt        DateTime?
+  inChairAt          DateTime?
+  completedAt        DateTime?
+  cancellationReason String?
+  noShowReason       String?
+  /// True when the patient arrived without a booking.
+  walkIn             Boolean           @default(false)
   // Drives the "revenue recovered" figure on the dashboard.
-  estimatedValue Decimal?      @db.Decimal(10, 2)
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
+  estimatedValue     Decimal?          @db.Decimal(10, 2)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
   patient  Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
   provider User?   @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  chair    Chair?  @relation(fields: [chairId], references: [id], onDelete: SetNull)
 
   // Links a replacement booking back to the no-show it recovered.
   rebookedFromId String?      @unique @db.Uuid
@@ -158,6 +235,9 @@ model Appointment {
   encounter       Encounter?
   recommendations Recommendation[]
 
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@index([clinicId])
   @@index([startsAt])
   @@index([patientId, startsAt])
   @@index([status])
@@ -166,6 +246,7 @@ model Appointment {
 
 model Encounter {
   id            String   @id @default(uuid()) @db.Uuid
+  clinicId      String   @db.Uuid
   patientId     String   @db.Uuid
   appointmentId String?  @unique @db.Uuid
   providerId    String?  @db.Uuid
@@ -181,12 +262,16 @@ model Encounter {
   toothFindings ToothFinding[]
   images        Image[]
 
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@index([clinicId])
   @@index([patientId, occurredAt])
   @@map("encounters")
 }
 
 model Note {
   id          String    @id @default(uuid()) @db.Uuid
+  clinicId    String    @db.Uuid
   encounterId String    @db.Uuid
   authorId    String?   @db.Uuid
   body        String
@@ -198,6 +283,9 @@ model Note {
   encounter Encounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
   author    User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
 
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@index([clinicId])
   @@index([encounterId])
   @@map("notes")
 }
@@ -205,6 +293,7 @@ model Note {
 /// Odontogram. One row per observed finding on one tooth.
 model ToothFinding {
   id          String         @id @default(uuid()) @db.Uuid
+  clinicId    String         @db.Uuid
   patientId   String         @db.Uuid
   encounterId String?        @db.Uuid
   chartedById String?        @db.Uuid
@@ -222,6 +311,9 @@ model ToothFinding {
   encounter Encounter? @relation(fields: [encounterId], references: [id], onDelete: SetNull)
   chartedBy User?      @relation(fields: [chartedById], references: [id], onDelete: SetNull)
 
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@index([clinicId])
   @@index([patientId, toothCode])
   @@index([patientId, resolvedAt])
   @@map("tooth_findings")
@@ -229,6 +321,7 @@ model ToothFinding {
 
 model Image {
   id           String    @id @default(uuid()) @db.Uuid
+  clinicId     String    @db.Uuid
   patientId    String    @db.Uuid
   encounterId  String?   @db.Uuid
   uploadedById String?   @db.Uuid
@@ -245,12 +338,16 @@ model Image {
   encounter  Encounter? @relation(fields: [encounterId], references: [id], onDelete: SetNull)
   uploadedBy User?      @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
 
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@index([clinicId])
   @@index([patientId, createdAt])
   @@map("images")
 }
 
 model TreatmentPlan {
   id            String              @id @default(uuid()) @db.Uuid
+  clinicId      String              @db.Uuid
   patientId     String              @db.Uuid
   dentistId     String?             @db.Uuid
   title         String
@@ -268,12 +365,16 @@ model TreatmentPlan {
   dentist User?    @relation(fields: [dentistId], references: [id], onDelete: SetNull)
   recalls Recall[]
 
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@index([clinicId])
   @@index([patientId, status])
   @@map("treatment_plans")
 }
 
 model Recall {
   id              String    @id @default(uuid()) @db.Uuid
+  clinicId        String    @db.Uuid
   patientId       String    @db.Uuid
   treatmentPlanId String?   @db.Uuid
   dueAt           DateTime
@@ -285,6 +386,9 @@ model Recall {
   patient       Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
   treatmentPlan TreatmentPlan? @relation(fields: [treatmentPlanId], references: [id], onDelete: SetNull)
 
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@index([clinicId])
   @@index([dueAt])
   @@index([patientId, dueAt])
   @@map("recalls")
@@ -294,6 +398,7 @@ model Recall {
 /// approve before status can reach SENT.
 model Recommendation {
   id            String               @id @default(uuid()) @db.Uuid
+  clinicId      String               @db.Uuid
   patientId     String               @db.Uuid
   appointmentId String?              @db.Uuid
   approvedById  String?              @db.Uuid
@@ -313,6 +418,9 @@ model Recommendation {
   approvedBy  User?        @relation(fields: [approvedById], references: [id], onDelete: SetNull)
   messages    Message[]
 
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@index([clinicId])
   @@index([status, createdAt])
   @@index([patientId])
   @@map("recommendations")
@@ -321,6 +429,7 @@ model Recommendation {
 /// Communications log. Sending is mocked — nothing leaves the system.
 model Message {
   id               String           @id @default(uuid()) @db.Uuid
+  clinicId         String           @db.Uuid
   patientId        String           @db.Uuid
   recommendationId String?          @db.Uuid
   sentById         String?          @db.Uuid
@@ -335,6 +444,9 @@ model Message {
   recommendation Recommendation? @relation(fields: [recommendationId], references: [id], onDelete: SetNull)
   sentBy         User?           @relation(fields: [sentById], references: [id], onDelete: SetNull)
 
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@index([clinicId])
   @@index([patientId, sentAt])
   @@map("messages")
 }
@@ -342,6 +454,7 @@ model Message {
 /// Append-only. Rows are inserted, never updated or deleted.
 model AuditEvent {
   id         String   @id @default(uuid()) @db.Uuid
+  clinicId   String   @db.Uuid
   actorId    String?  @db.Uuid
   actorRole  Role?
   action     String
@@ -353,6 +466,9 @@ model AuditEvent {
 
   actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
 
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@index([clinicId])
   @@index([entityType, entityId])
   @@index([createdAt])
   @@map("audit_events")
@@ -360,20 +476,24 @@ model AuditEvent {
 
 /// Smart Waitlist. Patients who want earlier slots or have pending work.
 model WaitlistEntry {
-  id             String    @id @default(uuid()) @db.Uuid
-  patientId      String    @db.Uuid
-  preferredDays  String?   /// e.g. "Monday,Wednesday"
-  preferredTime  String?   /// "morning" | "afternoon" | "any"
-  procedureType  String?   /// e.g. "Crown fitting", "Cleaning"
-  estimatedMins  Int?      /// approximate procedure duration
-  note           String?
-  addedAt        DateTime  @default(now())
-  filledAt       DateTime? /// when the patient got a slot
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id            String    @id @default(uuid()) @db.Uuid
+  clinicId      String    @db.Uuid
+  patientId     String    @db.Uuid
+  preferredDays String? /// e.g. "Monday,Wednesday"
+  preferredTime String? /// "morning" | "afternoon" | "any"
+  procedureType String? /// e.g. "Crown fitting", "Cleaning"
+  estimatedMins Int? /// approximate procedure duration
+  note          String?
+  addedAt       DateTime  @default(now())
+  filledAt      DateTime? /// when the patient got a slot
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@index([clinicId])
   @@index([filledAt])
   @@index([patientId])
   @@map("waitlist_entries")

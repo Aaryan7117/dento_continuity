@@ -85,6 +85,13 @@ export function toAppointment(a: AppointmentRow): Appointment {
     reason: a.reason,
     estimatedValue: money(a.estimatedValue),
     rebookedFromId: a.rebookedFromId,
+    chairId: a.chairId,
+    checkedInAt: a.checkedInAt ? iso(a.checkedInAt) : null,
+    inChairAt: a.inChairAt ? iso(a.inChairAt) : null,
+    completedAt: a.completedAt ? iso(a.completedAt) : null,
+    cancellationReason: a.cancellationReason,
+    noShowReason: a.noShowReason,
+    walkIn: a.walkIn,
     createdAt: iso(a.createdAt),
     updatedAt: iso(a.updatedAt),
   };
@@ -94,6 +101,7 @@ export function toAppointmentWithPatient(
   a: AppointmentRow & {
     patient: PatientRow;
     provider: UserRow | null;
+    chair?: { id: string; name: string } | null;
     recommendations: { id: string }[];
   }
 ): AppointmentWithPatient {
@@ -101,6 +109,7 @@ export function toAppointmentWithPatient(
     ...toAppointment(a),
     patient: toPatientSummary(a.patient),
     provider: a.provider ? toUserSummary(a.provider) : null,
+    chair: a.chair ? { id: a.chair.id, name: a.chair.name } : null,
     pendingRecommendationId: a.recommendations[0]?.id ?? null,
   };
 }

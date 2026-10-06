@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { currentClinicId } from "@/lib/tenant";
 import { recordAudit } from "@/lib/audit";
 import { getDentistActor, type Actor } from "@/lib/actors";
 import { toToothFinding } from "@/lib/serializers";
@@ -73,6 +74,7 @@ export async function createToothFinding(
 ): Promise<ToothFinding> {
   const row = await prisma.toothFinding.create({
     data: {
+      clinicId: await currentClinicId(),
       patientId: input.patientId,
       encounterId: input.encounterId ?? null,
       chartedById: chartedBy.id,

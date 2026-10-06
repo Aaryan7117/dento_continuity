@@ -1,65 +1,69 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Bell, Sparkles, UserX, Clock, Check, X, ArrowRight, ShieldAlert } from "lucide-react";
+import { Bell, Sparkles, UserX, Clock, Check, X, ArrowRight, ShieldAlert, MessageSquareReply } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { formatDistanceToNowStrict } from "date-fns";
 import { toast } from "sonner";
+import type { NotificationItem } from "@/lib/notifications";
 
-interface NotificationItem {
-  id: string;
-  type: "NO_SHOW" | "RECOMMENDATION" | "RECALL" | "BILLING";
-  title: string;
-  description: string;
-  time: string;
-  link: string;
-  read: boolean;
+// Read and dismissed state is a per-browser convenience; the items themselves
+// come from live records and vanish when their cause is resolved.
+const READ_KEY = "dento.notifications.read";
+const DISMISSED_KEY = "dento.notifications.dismissed";
+const REFRESH_MS = 60_000;
+
+function loadIds(key: string): string[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem(key) ?? "[]");
+    return Array.isArray(raw) ? raw.filter((v) => typeof v === "string") : [];
+  } catch {
+    return [];
+  }
 }
 
-const INITIAL_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: "notif-1",
-    type: "RECOMMENDATION",
-    title: "Retention Draft Ready",
-    description: "Follow-up message drafted for Marcus Delgado (Crown fitting missed).",
-    time: "10m ago",
-    link: "/front-desk",
-    read: false,
-  },
-  {
-    id: "notif-2",
-    type: "NO_SHOW",
-    title: "No-Show Flagged",
-    description: "Marcus Delgado missed 9:30 AM appointment with Dr. Adeleke.",
-    time: "25m ago",
-    link: "/patients/c10fcf00-0f92-46c8-aad3-9bea0ac4c4d7",
-    read: false,
-  },
-  {
-    id: "notif-3",
-    type: "RECALL",
-    title: "8 Recalls Due This Month",
-    description: "Patients due for hygiene and periodic exams.",
-    time: "2h ago",
-    link: "/calendar",
-    read: false,
-  },
-  {
-    id: "notif-4",
-    type: "BILLING",
-    title: "Treatment Plan Accepted",
-    description: "Folake Adebayo accepted Root Canal Therapy treatment plan.",
-    time: "1d ago",
-    link: "/patients/1682b179-b921-4b6c-a97d-29b1b52f9362",
-    read: true,
-  },
-];
+function saveIds(key: string, ids: string[]) {
+  try {
+    localStorage.setItem(key, JSON.stringify(ids));
+  } catch {
+    // Private windows and blocked storage: the state just lasts for this page.
+  }
+}
 
 export default function NotificationCenter() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
+  const [items, setItems] = useState<NotificationItem[]>([]);
+  // Safe to read during the first render: nothing is shown until the list has
+  // been fetched, so the server and browser output still match.
+  const [readIds, setReadIds] = useState<string[]>(() => loadIds(READ_KEY));
+  const [dismissedIds, setDismissedIds] = useState<string[]>(() => loadIds(DISMISSED_KEY));
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const notifications = items
+    .filter((n) => !dismissedIds.includes(n.id))
+    .map((n) => ({ ...n, read: readIds.includes(n.id) }));
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  // Refetched on navigation as well as on a timer, so approving a draft or
+  // flagging a no-show is reflected without a manual reload.
+  useEffect(() => {
+    let cancelled = false;
+    const load = () =>
+      fetch("/api/notifications")
+        .then((r) => (r.ok ? r.json() : []))
+        .then((data: NotificationItem[]) => {
+          if (!cancelled && Array.isArray(data)) setItems(data);
+        })
+        .catch(() => {});
+    load();
+    const timer = setInterval(load, REFRESH_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [pathname]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -71,21 +75,26 @@ export default function NotificationCenter() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  function remember(key: string, ids: string[], set: (ids: string[]) => void) {
+    // Only ids still on the list are kept, so the stored set cannot grow forever.
+    const live = ids.filter((id) => items.some((n) => n.id === id));
+    set(live);
+    saveIds(key, live);
+  }
+
   function markAllRead() {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    remember(READ_KEY, items.map((n) => n.id), setReadIds);
     toast.success("All notifications marked as read");
   }
 
   function dismissNotification(id: string, e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    remember(DISMISSED_KEY, [...dismissedIds, id], setDismissedIds);
   }
 
   function markItemRead(id: string) {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
+    remember(READ_KEY, [...readIds, id], setReadIds);
     setIsOpen(false);
   }
 
@@ -153,6 +162,9 @@ export default function NotificationCenter() {
                 } else if (item.type === "RECALL") {
                   icon = <Clock className="w-4 h-4 text-brand" />;
                   iconBg = "bg-brand/12";
+                } else if (item.type === "PATIENT") {
+                  icon = <MessageSquareReply className="w-4 h-4 text-brand" />;
+                  iconBg = "bg-brand/12";
                 } else if (item.type === "BILLING") {
                   icon = <ShieldAlert className="w-4 h-4 text-emerald-600" />;
                   iconBg = "bg-emerald-500/12";
@@ -173,7 +185,9 @@ export default function NotificationCenter() {
                         <span className="font-semibold text-xs text-ink block truncate">
                           {item.title}
                         </span>
-                        <span className="text-[10px] text-ink-faint shrink-0">{item.time}</span>
+                        <span className="text-[10px] text-ink-faint shrink-0">
+                          {formatDistanceToNowStrict(new Date(item.at), { addSuffix: true })}
+                        </span>
                       </div>
                       <p className="text-[11px] text-ink-muted mt-0.5 leading-relaxed line-clamp-2">
                         {item.description}

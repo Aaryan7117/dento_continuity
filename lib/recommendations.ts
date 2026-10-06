@@ -7,6 +7,7 @@
  */
 
 import { prisma } from "@/lib/db";
+import { currentClinicId } from "@/lib/tenant";
 import { recordAudit } from "@/lib/audit";
 import { getFrontDeskActor } from "@/lib/actors";
 import {
@@ -122,9 +123,12 @@ export async function approveRecommendation(
   const body = editedMessage?.trim() || existing.draftMessage;
   const finalChannel = channel ?? existing.channel;
 
-  const [recommendation, message] = await prisma.$transaction([
-    prisma.recommendation.update({
-      where: { id },
+  // Interactive transaction: the scoped client cannot build a batch, and the
+  // transaction client it hands out is unscoped, so the clinic is set by hand.
+  const clinicId = await currentClinicId();
+  const [recommendation, message] = await prisma.$transaction(async (tx) => {
+    const updated = await tx.recommendation.update({
+      where: { id, clinicId },
       data: {
         status: "SENT",
         approvedById: actor.id,
@@ -133,9 +137,10 @@ export async function approveRecommendation(
         draftMessage: body,
         channel: finalChannel,
       },
-    }),
-    prisma.message.create({
+    });
+    const created = await tx.message.create({
       data: {
+        clinicId,
         patientId: existing.patientId,
         recommendationId: id,
         sentById: actor.id,
@@ -144,8 +149,9 @@ export async function approveRecommendation(
         body,
         sentAt: now,
       },
-    }),
-  ]);
+    });
+    return [updated, created] as const;
+  });
 
   console.log(
     `[mock send] ${finalChannel} to patient ${existing.patientId}: ${body}`

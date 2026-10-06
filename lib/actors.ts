@@ -1,9 +1,10 @@
 /**
- * Stand-in for authentication.
+ * Who is acting.
  *
- * CLAUDE.md fixes the demo at two hardcoded roles with no permission engine, so
- * writes attribute themselves to the first user holding the relevant role
- * instead of to a signed-in session.
+ * With a signed-in session, the actor is that user whatever their role. The
+ * role-named helpers remain for callers that run without a session (the MCP
+ * server, seed and scripts) and fall back to the clinic's first user in that
+ * role, which audit records as-is.
  */
 
 import { prisma } from "@/lib/db";
@@ -14,16 +15,30 @@ export interface Actor {
   role: Role | null;
 }
 
-/** Null when the database has no user in that role, which audit records as-is. */
+async function sessionActor(): Promise<Actor | null> {
+  try {
+    const { getSession } = await import("@/lib/auth");
+    const session = await getSession();
+    return session ? { id: session.userId, role: session.role } : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Null when the clinic has no user in that role. */
 async function firstUserInRole(role: Role): Promise<Actor> {
-  const user = await prisma.user.findFirst({ where: { role } });
+  const user = await prisma.user.findFirst({ where: { role, isActive: true } });
   return { id: user?.id ?? null, role: user ? role : null };
 }
 
-export function getDentistActor(): Promise<Actor> {
-  return firstUserInRole("DENTIST");
+export async function getCurrentActor(): Promise<Actor> {
+  return (await sessionActor()) ?? { id: null, role: null };
 }
 
-export function getFrontDeskActor(): Promise<Actor> {
-  return firstUserInRole("FRONT_DESK");
+export async function getDentistActor(): Promise<Actor> {
+  return (await sessionActor()) ?? firstUserInRole("DENTIST");
+}
+
+export async function getFrontDeskActor(): Promise<Actor> {
+  return (await sessionActor()) ?? firstUserInRole("FRONT_DESK");
 }

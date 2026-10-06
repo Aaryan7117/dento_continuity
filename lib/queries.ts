@@ -3,9 +3,11 @@
  * Called directly from Server Components — NOT "use server" (those are for mutations only).
  */
 
-import { prisma } from "@/lib/db";
+import { prisma, prismaUnscoped } from "@/lib/db";
+import { runAsClinic } from "@/lib/tenant";
 import { listPendingRecommendations } from "@/lib/recommendations";
 import { getRecoveryStats } from "@/lib/recovery";
+import { toAppointment, toAppointmentWithPatient } from "@/lib/serializers";
 import type {
   AppointmentWithPatient,
   DashboardSummary,
@@ -44,36 +46,13 @@ export async function getTodaySchedule(): Promise<AppointmentWithPatient[]> {
     include: {
       patient: true,
       provider: true,
+      chair: true,
       recommendations: { where: { status: "PENDING" }, select: { id: true } },
     },
     orderBy: { startsAt: "asc" },
   });
 
-  return rows.map((a) => ({
-    id: a.id,
-    patientId: a.patientId,
-    providerId: a.providerId,
-    startsAt: a.startsAt.toISOString(),
-    endsAt: a.endsAt.toISOString(),
-    status: a.status,
-    reason: a.reason,
-    estimatedValue: a.estimatedValue ? Number(a.estimatedValue) : null,
-    rebookedFromId: a.rebookedFromId,
-    createdAt: a.createdAt.toISOString(),
-    updatedAt: a.updatedAt.toISOString(),
-    patient: {
-      id: a.patient.id,
-      firstName: a.patient.firstName,
-      lastName: a.patient.lastName,
-      phone: a.patient.phone,
-      dateOfBirth: a.patient.dateOfBirth.toISOString().slice(0, 10),
-    },
-    provider: a.provider
-      ? { id: a.provider.id, name: a.provider.name, role: a.provider.role }
-      : null,
-    pendingRecommendationId:
-      a.recommendations.length > 0 ? a.recommendations[0].id : null,
-  }));
+  return rows.map(toAppointmentWithPatient);
 }
 
 // ---------------------------------------------------------------------------
@@ -98,7 +77,7 @@ export async function getPatientDetail(
     where: { id },
     include: {
       appointments: {
-        include: { provider: true },
+        include: { provider: true, rebookedTo: { select: { id: true } } },
         orderBy: { startsAt: "desc" },
       },
       treatmentPlans: { orderBy: { proposedAt: "desc" } },
@@ -122,19 +101,7 @@ export async function getPatientDetail(
     consentAt: p.consentAt?.toISOString() ?? null,
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
-    appointments: p.appointments.map((a) => ({
-      id: a.id,
-      patientId: a.patientId,
-      providerId: a.providerId,
-      startsAt: a.startsAt.toISOString(),
-      endsAt: a.endsAt.toISOString(),
-      status: a.status,
-      reason: a.reason,
-      estimatedValue: a.estimatedValue ? Number(a.estimatedValue) : null,
-      rebookedFromId: a.rebookedFromId,
-      createdAt: a.createdAt.toISOString(),
-      updatedAt: a.updatedAt.toISOString(),
-    })),
+    appointments: p.appointments.map(toAppointment),
     treatmentPlans: p.treatmentPlans.map((tp) => ({
       id: tp.id,
       patientId: tp.patientId,
@@ -281,11 +248,25 @@ export async function getEncounterDetail(
 export async function getPatientPortal(
   patientId: string
 ): Promise<PatientPortalResponse | null> {
+  // The portal is reached by a patient, not a signed-in staff member, so the
+  // clinic comes from the patient record itself. Step 3 (self-action links)
+  // replaces this with a signed, expiring link.
+  const owner = await prismaUnscoped.patient.findUnique({
+    where: { id: patientId },
+    select: { clinicId: true },
+  });
+  if (!owner) return null;
+  return runAsClinic(owner.clinicId, () => loadPatientPortal(patientId));
+}
+
+async function loadPatientPortal(
+  patientId: string
+): Promise<PatientPortalResponse | null> {
   const p = await prisma.patient.findUnique({
     where: { id: patientId },
     include: {
       appointments: {
-        include: { provider: true },
+        include: { provider: true, rebookedTo: { select: { id: true } } },
         orderBy: { startsAt: "desc" },
       },
       treatmentPlans: { orderBy: { proposedAt: "desc" } },
@@ -309,6 +290,7 @@ export async function getPatientPortal(
       status: a.status,
       reason: a.reason,
       providerName: a.provider?.name ?? null,
+      rebookedToId: a.rebookedTo?.id ?? null,
     })),
     treatmentPlans: p.treatmentPlans.map((tp) => ({
       id: tp.id,
@@ -411,36 +393,13 @@ export async function getCalendarAppointments(from: Date, to: Date): Promise<imp
     include: {
       patient: true,
       provider: true,
+      chair: true,
       recommendations: { where: { status: "PENDING" }, select: { id: true } },
     },
     orderBy: { startsAt: "asc" },
   });
 
-  return rows.map((a) => ({
-    id: a.id,
-    patientId: a.patientId,
-    providerId: a.providerId,
-    startsAt: a.startsAt.toISOString(),
-    endsAt: a.endsAt.toISOString(),
-    status: a.status,
-    reason: a.reason,
-    estimatedValue: a.estimatedValue ? Number(a.estimatedValue) : null,
-    rebookedFromId: a.rebookedFromId,
-    createdAt: a.createdAt.toISOString(),
-    updatedAt: a.updatedAt.toISOString(),
-    patient: {
-      id: a.patient.id,
-      firstName: a.patient.firstName,
-      lastName: a.patient.lastName,
-      phone: a.patient.phone,
-      dateOfBirth: a.patient.dateOfBirth.toISOString().slice(0, 10),
-    },
-    provider: a.provider
-      ? { id: a.provider.id, name: a.provider.name, role: a.provider.role }
-      : null,
-    pendingRecommendationId:
-      a.recommendations.length > 0 ? a.recommendations[0].id : null,
-  }));
+  return rows.map(toAppointmentWithPatient);
 }
 
 // ---------------------------------------------------------------------------

@@ -11,6 +11,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { prisma } from "@/lib/db";
+import { currentClinicId } from "@/lib/tenant";
 import { recordAudit } from "@/lib/audit";
 import { getDentistActor, type Actor } from "@/lib/actors";
 import { toImage } from "@/lib/serializers";
@@ -115,6 +116,7 @@ export async function createImage(
 
   const row = await prisma.image.create({
     data: {
+      clinicId: await currentClinicId(),
       patientId: input.patientId,
       encounterId: input.encounterId ?? null,
       uploadedById: uploadedBy.id,

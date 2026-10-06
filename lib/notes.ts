@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { currentClinicId } from "@/lib/tenant";
 import { recordAudit } from "@/lib/audit";
 import { getDentistActor, type Actor } from "@/lib/actors";
 import { toNote, toNoteWithAuthor } from "@/lib/serializers";
@@ -70,6 +71,7 @@ export async function createNote(
 ): Promise<Note> {
   const row = await prisma.note.create({
     data: {
+      clinicId: await currentClinicId(),
       encounterId: input.encounterId,
       authorId: author.id,
       body: input.body,

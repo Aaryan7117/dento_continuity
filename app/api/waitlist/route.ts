@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { fail, handle, ok, parseBody } from "@/lib/api";
+import { addToWaitlist, addToWaitlistSchema } from "@/lib/waitlist";
 
 // GET: List waitlist candidates, optionally filtered for a time slot
 export async function GET(req: NextRequest) {
@@ -68,28 +70,17 @@ export async function GET(req: NextRequest) {
 
 // POST: Add a patient to the waitlist
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  return handle(async () => {
+    const body = await parseBody(req, addToWaitlistSchema);
+    if (!body.ok) return body.response;
 
-  const entry = await prisma.waitlistEntry.create({
-    data: {
-      patientId: body.patientId,
-      preferredDays: body.preferredDays || null,
-      preferredTime: body.preferredTime || "any",
-      procedureType: body.procedureType || null,
-      estimatedMins: body.estimatedMins || null,
-      note: body.note || null,
-    },
-    include: {
-      patient: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          phone: true,
-        },
-      },
-    },
+    const result = await addToWaitlist(body.data);
+    if (!result.ok) {
+      return result.reason === "patientNotFound"
+        ? fail("Patient not found", 404)
+        : fail("This patient is already on the waitlist.", 409);
+    }
+
+    return ok({ id: result.entryId }, 201);
   });
-
-  return NextResponse.json(entry, { status: 201 });
 }
