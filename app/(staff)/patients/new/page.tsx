@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { createPatient } from "@/lib/actions";
 import { UserPlus, ArrowLeft, Save } from "lucide-react";
@@ -10,6 +10,7 @@ import VoiceFill from "@/app/components/voice/VoiceFill";
 
 export default function NewPatientPage() {
   const router = useRouter();
+  const voiceTranscript = useSearchParams().get("voice") ?? undefined;
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -90,6 +91,7 @@ export default function NewPatientPage() {
       <div className="card p-7">
         <form onSubmit={handleSubmit} className="space-y-5">
           <VoiceFill
+            initialTranscript={voiceTranscript}
             hint="Say it in one go: “Priya Sharma, phone 98765 43210, born 14 March 1990, email priya at gmail dot com, consent yes”."
             fields={[
               { name: "firstName", aliases: ["first name", "given name"], type: "text" },

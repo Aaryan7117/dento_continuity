@@ -3,6 +3,7 @@ const path = require("path");
 const fs = require("fs");
 const { fork } = require("child_process");
 const dotenv = require("dotenv");
+const voiceModel = require("./voice-model.cjs");
 
 const isDev = process.env.NODE_ENV === "development" || !app.isPackaged;
 const appDir = isDev ? path.join(__dirname, "..") : app.getAppPath();
@@ -100,6 +101,10 @@ async function startServer() {
     PORT: String(port),
     HOSTNAME: "127.0.0.1",
     NODE_ENV: "production",
+    // The server looks here for the on-device speech model (see electron/voice-model.cjs).
+    VOICE_MODEL_DIR: voiceModel.modelsDir(),
+    // Patient links must point at this running instance, whatever port it got.
+    APP_BASE_URL: process.env.APP_BASE_URL && !process.env.APP_BASE_URL.includes("localhost") ? process.env.APP_BASE_URL : `http://127.0.0.1:${port}`,
   };
 
   const logFile = path.join(app.getPath("userData"), "server.log");
@@ -202,8 +207,54 @@ ipcMain.on("window-close", () => {
   if (mainWindow) mainWindow.close();
 });
 
+/**
+ * First launch: offer the on-device speech model. Declining is remembered for
+ * the session only, so the offer returns next time until it is installed.
+ */
+function offerVoiceModel() {
+  if (voiceModel.isInstalled()) return;
+  const win = new BrowserWindow({
+    width: 520,
+    height: 340,
+    resizable: false,
+    minimizable: false,
+    parent: mainWindow ?? undefined,
+    title: "On-device voice",
+    backgroundColor: "#0e1012",
+    webPreferences: {
+      preload: path.join(__dirname, "voice-setup-preload.cjs"),
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: false,
+    },
+  });
+  win.setMenuBarVisibility(false);
+  win.loadFile(path.join(__dirname, "voice-setup.html"));
+
+  const send = (p) => {
+    if (!win.isDestroyed()) win.webContents.send("voice-model:progress", p);
+  };
+  const onStart = async () => {
+    try {
+      await voiceModel.install(send);
+    } catch (err) {
+      send({ phase: "error", message: err instanceof Error ? err.message : String(err) });
+    }
+  };
+  const onLater = () => {
+    if (!win.isDestroyed()) win.close();
+  };
+  ipcMain.on("voice-model:start", onStart);
+  ipcMain.on("voice-model:later", onLater);
+  win.on("closed", () => {
+    ipcMain.off("voice-model:start", onStart);
+    ipcMain.off("voice-model:later", onLater);
+  });
+}
+
 app.whenReady().then(async () => {
   await createWindow();
+  offerVoiceModel();
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {

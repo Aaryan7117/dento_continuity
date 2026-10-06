@@ -63,3 +63,6 @@ next-env.d.ts
 /DENTO GROWTH ENGINE OPERATING SYSTEM.md
 /Dental Industry_IDA_ISDR_DENTO.md
 /docs/sprint0/
+
+# Speech models downloaded at first launch, never committed
+/models/

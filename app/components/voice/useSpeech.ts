@@ -8,6 +8,24 @@
  */
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { startRecording, type Recorder } from "./recorder";
+
+export type SpeechEngine = "local" | "browser" | "none";
+
+/** Asked once per page load: does this server hold a speech model? */
+let localProbe: Promise<boolean> | null = null;
+function probeLocal(): Promise<boolean> {
+  if (!localProbe) {
+    localProbe = fetch("/api/voice/transcribe", { method: "GET" })
+      .then((r) => (r.ok ? r.json() : { available: false }))
+      .then((info: { available?: boolean }) => !!info.available)
+      .catch(() => false);
+  }
+  return localProbe;
+}
+
+/** Push-to-talk clips longer than this are cut off; commands are short. */
+const MAX_LOCAL_SECONDS = 20;
 
 type RecognitionCtor = new () => SpeechRecognitionLike;
 interface SpeechRecognitionLike {
@@ -39,20 +57,81 @@ export function useSpeech(onResult: (text: string) => void, lang = "en-IN") {
     () => null
   );
   const [listening, setListening] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
   const [interim, setInterim] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [engine, setEngine] = useState<SpeechEngine | null>(null);
   const recRef = useRef<SpeechRecognitionLike | null>(null);
+  const recorderRef = useRef<Recorder | null>(null);
+  const cutoffRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Prefer the model on our own machine; fall back to the browser recogniser.
+  useEffect(() => {
+    let live = true;
+    probeLocal().then((local) => {
+      if (live) setEngine(local ? "local" : getCtor() ? "browser" : "none");
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
   const finalRef = useRef("");
   const onResultRef = useRef(onResult);
   useEffect(() => {
     onResultRef.current = onResult;
   }, [onResult]);
 
-  const stop = useCallback(() => {
-    recRef.current?.stop();
+  const finishLocal = useCallback(async () => {
+    const recorder = recorderRef.current;
+    if (!recorder) return;
+    recorderRef.current = null;
+    if (cutoffRef.current) clearTimeout(cutoffRef.current);
+    setListening(false);
+    setTranscribing(true);
+    try {
+      const wav = await recorder.stop();
+      const res = await fetch("/api/voice/transcribe", {
+        method: "POST",
+        headers: { "Content-Type": "audio/wav" },
+        body: wav,
+      });
+      if (!res.ok) throw new Error(`transcribe ${res.status}`);
+      const data = (await res.json()) as { text: string };
+      setInterim("");
+      if (data.text) onResultRef.current(data.text);
+    } catch (e) {
+      setError(
+        e instanceof Error && e.message.includes("404")
+          ? "The local speech model is not loaded."
+          : "Could not transcribe; try again."
+      );
+    } finally {
+      setTranscribing(false);
+    }
   }, []);
 
+  const stop = useCallback(() => {
+    if (recorderRef.current) void finishLocal();
+    else recRef.current?.stop();
+  }, [finishLocal]);
+
+  const startLocal = useCallback(async () => {
+    setError(null);
+    setInterim("");
+    try {
+      recorderRef.current = await startRecording();
+      setListening(true);
+      cutoffRef.current = setTimeout(() => void finishLocal(), MAX_LOCAL_SECONDS * 1000);
+    } catch {
+      setError("Microphone access is blocked for this site.");
+    }
+  }, [finishLocal]);
+
   const start = useCallback(() => {
+    if (engine === "local") {
+      void startLocal();
+      return;
+    }
     const Ctor = getCtor();
     if (!Ctor) return;
     recRef.current?.abort();
@@ -92,11 +171,18 @@ export function useSpeech(onResult: (text: string) => void, lang = "en-IN") {
     recRef.current = rec;
     setListening(true);
     rec.start();
-  }, [lang]);
+  }, [lang, engine, startLocal]);
 
-  useEffect(() => () => recRef.current?.abort(), []);
+  useEffect(
+    () => () => {
+      recRef.current?.abort();
+      if (cutoffRef.current) clearTimeout(cutoffRef.current);
+    },
+    []
+  );
 
-  return { supported, listening, interim, error, start, stop };
+  const usable = engine === null ? supported : engine !== "none";
+  return { supported: usable, engine, listening, transcribing, interim, error, start, stop };
 }
 
 /** Reads a short answer aloud when the browser can. Silent elsewhere. */

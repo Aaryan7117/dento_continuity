@@ -9,10 +9,11 @@
  * is set through the native setter so React notices the change).
  */
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as chrono from "chrono-node";
 import { Loader2, Mic, MicOff } from "lucide-react";
 import { useSpeech } from "./useSpeech";
+import { wordsToDigits } from "@/lib/voice/numbers";
 
 export interface VoiceField {
   /** The input's `name` attribute. */
@@ -65,7 +66,11 @@ function titleCase(s: string): string {
 }
 
 export function assignFields(transcript: string, fields: VoiceField[]): Record<string, string | boolean> {
-  const text = transcript.replace(/[,.;]+/g, " , ").replace(/\s+/g, " ").trim();
+  // Commas (and the engine's full stops) separate fields; numbers become digits.
+  const text = wordsToDigits(transcript.replace(/[。，]/g, ","))
+    .replace(/[,.;:]+/g, " , ")
+    .replace(/\s+/g, " ")
+    .trim();
   // Every alias becomes a boundary; the words after it up to the next boundary are its value.
   const boundaries: { index: number; length: number; field: VoiceField }[] = [];
   for (const f of fields) {
@@ -133,16 +138,36 @@ function setInputValue(name: string, value: string | boolean) {
   return true;
 }
 
-export default function VoiceFill({ fields, hint }: { fields: VoiceField[]; hint: string }) {
+export default function VoiceFill({
+  fields,
+  hint,
+  initialTranscript,
+}: {
+  fields: VoiceField[];
+  hint: string;
+  /** A sentence spoken elsewhere (the voice console) and handed to this form. */
+  initialTranscript?: string;
+}) {
   const [last, setLast] = useState<{ heard: string; filled: string[] } | null>(null);
-  const speech = useSpeech((text) => {
-    const values = assignFields(text, fields);
-    const filled: string[] = [];
-    for (const [name, value] of Object.entries(values)) {
-      if (setInputValue(name, value)) filled.push(name);
+  const apply = useCallback(
+    (text: string) => {
+      const values = assignFields(text, fields);
+      const filled: string[] = [];
+      for (const [name, value] of Object.entries(values)) {
+        if (setInputValue(name, value)) filled.push(name);
+      }
+      setLast({ heard: text, filled });
+    },
+    [fields]
+  );
+  const speech = useSpeech(apply);
+  const appliedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (initialTranscript && appliedRef.current !== initialTranscript) {
+      appliedRef.current = initialTranscript;
+      apply(initialTranscript);
     }
-    setLast({ heard: text, filled });
-  });
+  }, [initialTranscript, apply]);
 
   if (speech.supported === false) return null;
 

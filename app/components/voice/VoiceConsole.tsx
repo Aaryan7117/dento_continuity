@@ -158,9 +158,17 @@ export default function VoiceConsole() {
                 {speech.listening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
               </button>
               <div className="flex-1 min-w-0">
-                {speech.listening ? (
+                {speech.transcribing ? (
+                  <p className="text-sm flex items-center gap-2" style={{ color: "var(--ink-faint)" }}>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Transcribing on this machine…
+                  </p>
+                ) : speech.listening ? (
                   <p className="text-sm" style={{ color: "var(--ink)" }}>
-                    {speech.interim || <span style={{ color: "var(--ink-faint)" }}>Listening…</span>}
+                    {speech.interim || (
+                      <span style={{ color: "var(--ink-faint)" }}>
+                        {speech.engine === "local" ? "Listening… tap the mic again when done." : "Listening…"}
+                      </span>
+                    )}
                   </p>
                 ) : heard ? (
                   <p className="text-sm" style={{ color: "var(--ink)" }}>
@@ -279,6 +287,9 @@ export default function VoiceConsole() {
                 className="flex-1 bg-transparent text-sm outline-none"
                 style={{ color: "var(--ink)" }}
               />
+              <span className="text-[10px]" style={{ color: "var(--ink-faint)" }}>
+                {speech.engine === "local" ? "on-device" : speech.engine === "browser" ? "browser" : ""}
+              </span>
               <kbd className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: "var(--raised)", color: "var(--ink-faint)" }}>
                 Alt+V
               </kbd>

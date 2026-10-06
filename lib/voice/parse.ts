@@ -8,6 +8,7 @@
  */
 
 import * as chrono from "chrono-node";
+import { stripSpokenPunctuation, wordsToDigits } from "@/lib/voice/numbers";
 import type { AppointmentStatus } from "@/app/generated/prisma/enums";
 
 export type Page =
@@ -48,6 +49,8 @@ export type Intent =
   | { kind: "reschedule"; name: string; startsAt: string | null; whenText: string | null }
   | { kind: "status"; name: string; to: AppointmentStatus; reason: string | null }
   | { kind: "waitlist"; name: string; preferredTime: "morning" | "afternoon" | "any" }
+  /** "new patient Priya Sharma, phone …": opens the form with the sentence ready to fill. */
+  | { kind: "newPatient"; transcript: string }
   | { kind: "unknown"; text: string };
 
 /** Hindi / Hinglish words staff mix into commands, mapped to the English the grammar knows. */
@@ -93,8 +96,8 @@ const METRICS: [RegExp, Metric][] = [
 const STATUS_PATTERNS: { re: RegExp; to: AppointmentStatus; nameGroup: number }[] = [
   { re: /^(?:check ?in|checkin)\s+(.+)$/, to: "CHECKED_IN", nameGroup: 1 },
   { re: /^(.+?)\s+(?:is here|has arrived|arrived|has come|came|is at the desk)$/, to: "CHECKED_IN", nameGroup: 1 },
-  { re: /^(?:take|send|move)\s+(.+?)\s+(?:to|into)\s+(?:the\s+)?chair(?:\s*\d+)?$/, to: "IN_CHAIR", nameGroup: 1 },
-  { re: /^(.+?)\s+(?:to|in|into)\s+(?:the\s+)?chair(?:\s*\d+)?$/, to: "IN_CHAIR", nameGroup: 1 },
+  { re: /^(?:take|send|move)\s+(.+?)\s+(?:to|into)\s+(?:the\s+)?chair(?:\s*(?:\d+|one|two|too|three|four))?$/, to: "IN_CHAIR", nameGroup: 1 },
+  { re: /^(.+?)\s+(?:to|in|into)\s+(?:the\s+)?chair(?:\s*(?:\d+|one|two|too|three|four))?$/, to: "IN_CHAIR", nameGroup: 1 },
   { re: /^(?:complete|completed|finish|finished|done with|finished with)\s+(.+)$/, to: "COMPLETED", nameGroup: 1 },
   { re: /^(.+?)\s+(?:is )?(?:done|complete|completed|finished)$/, to: "COMPLETED", nameGroup: 1 },
   { re: /^(?:mark\s+)?(.+?)\s+(?:as\s+)?(?:a\s+)?no[- ]?show$/, to: "NO_SHOW", nameGroup: 1 },
@@ -107,7 +110,12 @@ const STATUS_PATTERNS: { re: RegExp; to: AppointmentStatus; nameGroup: number }[
 const FILLERS = /^(?:please|hey|ok|okay|dento|hi|um+|uh+)\s+|\s+(?:please|thanks|thank you)$/g;
 
 export function normalize(raw: string): string {
-  let t = raw.toLowerCase().trim().replace(/[.,!?]+$/g, "").replace(/\s+/g, " ");
+  // Engines add punctuation and spell numbers out; the grammar wants neither.
+  let t = wordsToDigits(stripSpokenPunctuation(raw))
+    .toLowerCase()
+    .trim()
+    .replace(/[.,!?]+$/g, "")
+    .replace(/\s+/g, " ");
   for (const [re, en] of HINGLISH) t = t.replace(re, en);
   t = t.replace(FILLERS, "").trim();
   return t;
@@ -189,6 +197,10 @@ function cleanName(s: string): string {
 export function parseCommand(raw: string, now: Date = new Date()): Intent {
   const text = normalize(raw);
   if (!text) return { kind: "unknown", text: raw };
+
+  // Registration spoken in one go goes to the form, which fills itself from the words.
+  const np = text.match(/^(?:new patient|register(?: a)?(?: new)? patient|add(?: a)?(?: new)? patient)\b\s*(.*)$/);
+  if (np && np[1].trim()) return { kind: "newPatient", transcript: raw };
 
   // Navigation: "open dashboard", "go to settings", "show me today's schedule"
   const nav = text.match(/^(?:open|go to|goto|show(?: me)?|take me to|switch to)\s+(?:the\s+)?(.+)$/);

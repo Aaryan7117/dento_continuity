@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>On-device voice</title>
+<style>
+  body { margin: 0; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; background: #0e1012; color: #e8e6e3; }
+  .wrap { padding: 28px 30px; }
+  h1 { font-size: 18px; margin: 0 0 6px; }
+  p { margin: 0 0 14px; color: #b7b3ad; }
+  .row { display: flex; gap: 10px; margin-top: 18px; }
+  button { font: inherit; padding: 9px 16px; border-radius: 10px; border: 1px solid #2b2f33; background: #16191c; color: #e8e6e3; cursor: pointer; }
+  button.primary { background: linear-gradient(135deg, #0ea5e9, #6366f1); border-color: transparent; color: #fff; font-weight: 600; }
+  button:disabled { opacity: .5; cursor: default; }
+  .bar { height: 8px; background: #1c2024; border-radius: 999px; overflow: hidden; margin-top: 16px; display: none; }
+  .bar > i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #0ea5e9, #6366f1); transition: width .2s; }
+  .status { margin-top: 8px; font-size: 13px; color: #b7b3ad; min-height: 20px; }
+  .err { color: #f87171; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Voice commands on this computer</h1>
+  <p>DENTO can understand spoken commands without sending any audio to the internet. That needs a one-time download of a speech model (about 840 MB) onto this PC.</p>
+  <p>Without it, voice still works through the browser's recogniser, which sends audio to Google.</p>
+  <div class="row">
+    <button id="start" class="primary">Download now</button>
+    <button id="later">Not now</button>
+  </div>
+  <div class="bar" id="bar"><i id="fill"></i></div>
+  <div class="status" id="status"></div>
+</div>
+<script>
+  const start = document.getElementById("start");
+  const later = document.getElementById("later");
+  const bar = document.getElementById("bar");
+  const fill = document.getElementById("fill");
+  const status = document.getElementById("status");
+  const mb = (n) => (n / 1048576).toFixed(0);
+  start.onclick = () => {
+    start.disabled = true; later.disabled = true; bar.style.display = "block";
+    status.textContent = "Starting download…";
+    window.voiceSetup.start();
+  };
+  later.onclick = () => window.voiceSetup.later();
+  window.voiceSetup.onProgress((p) => {
+    if (p.phase === "download") {
+      fill.style.width = Math.min(100, (p.received / p.total) * 100).toFixed(1) + "%";
+      status.textContent = `Downloading… ${mb(p.received)} of ${mb(p.total)} MB`;
+    } else if (p.phase === "extract") {
+      fill.style.width = "100%";
+      status.textContent = "Unpacking… this takes a minute or two.";
+    } else if (p.phase === "done") {
+      status.textContent = "Installed. Voice now runs on this computer.";
+      later.textContent = "Close"; later.disabled = false;
+    } else if (p.phase === "error") {
+      status.innerHTML = '<span class="err">' + p.message + '</span>';
+      start.disabled = false; later.disabled = false; start.textContent = "Try again";
+    }
+  });
+</script>
+</body>
+</html>

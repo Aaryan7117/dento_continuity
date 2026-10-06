@@ -1,11 +1,13 @@
 import { Settings } from "lucide-react";
 import { getClinicSettings, listChairs } from "@/lib/clinic";
+import { localAsrInfo } from "@/lib/voice/local-asr";
 import SettingsClient from "./SettingsClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   const [settings, chairs] = await Promise.all([getClinicSettings(), listChairs(true)]);
+  const voice = localAsrInfo();
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -19,6 +21,18 @@ export default async function SettingsPage() {
         </p>
       </div>
       <SettingsClient settings={settings} chairs={chairs} />
+      <div className="card p-7 space-y-1">
+        <h2 className="text-base font-bold" style={{ color: "var(--ink)" }}>Voice recognition</h2>
+        {voice.available ? (
+          <p className="text-sm" style={{ color: "var(--ink-muted)" }}>
+            On this computer: <strong>{voice.engine}</strong> model installed. Spoken commands are recognised here; no audio leaves the machine.
+          </p>
+        ) : (
+          <p className="text-sm" style={{ color: "var(--ink-muted)" }}>
+            Using the browser&apos;s recogniser (audio is processed by the browser vendor). The desktop app offers an on-device model on first launch.
+          </p>
+        )}
+      </div>
     </div>
   );
 }

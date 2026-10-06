@@ -64,33 +64,71 @@ const fmt = (iso: string) =>
 // Matching people
 // ---------------------------------------------------------------------------
 
+/** Edit distance with transpositions; names come back from speech slightly bent. */
+function editDistance(a: string, b: string): number {
+  const d: number[][] = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++) {
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+      }
+    }
+  return d[a.length][b.length];
+}
+
+/** Collapses the spellings speech engines confuse: Varma/Verma, Belo/Bello, Zina/Zainab. */
+function soundKey(s: string): string {
+  const letters = s.toLowerCase().replace(/[^a-z]/g, "").replace(/ph/g, "f").replace(/ck/g, "k");
+  let out = "";
+  for (let i = 0; i < letters.length; i++) {
+    const ch = letters[i];
+    if (i > 0 && "aeiouy".includes(ch)) continue; // keep only the leading vowel
+    if (out[out.length - 1] === ch) continue; // drop doubled letters
+    out += ch;
+  }
+  return out;
+}
+
+function tokenScore(token: string, word: string): number {
+  const t = token.toLowerCase();
+  const w = word.toLowerCase();
+  if (t === w) return 4;
+  if (w.startsWith(t) || t.startsWith(w)) return 3;
+  const st = soundKey(t);
+  const sw = soundKey(w);
+  if (st === sw) return 2.5;
+  // "Tobola" → "tbl" is the start of "Tobiloba" → "tblb": the engine dropped a syllable.
+  if (st.length >= 3 && sw.length >= 2 && (sw.startsWith(st) || st.startsWith(sw))) return 2;
+  const dist = editDistance(t, w);
+  if (dist <= Math.max(1, Math.floor(Math.max(t.length, w.length) / 4))) return 2;
+  if (w.includes(t)) return 1;
+  return 0;
+}
+
 async function findPatients(name: string, limit = 5): Promise<Candidate[]> {
   const tokens = name.split(/\s+/).filter((t) => t.length >= 2);
   if (tokens.length === 0) return [];
+  // Clinics are small enough to score every patient in memory; a database
+  // "contains" filter would miss exactly the bent spellings this must catch.
   const rows = await prisma.patient.findMany({
-    where: {
-      OR: tokens.flatMap((t) => [
-        { firstName: { contains: t, mode: "insensitive" as const } },
-        { lastName: { contains: t, mode: "insensitive" as const } },
-      ]),
-    },
     select: { id: true, firstName: true, lastName: true, phone: true },
-    take: 25,
+    take: 5000,
   });
-  const score = (p: (typeof rows)[number]) => {
-    const full = `${p.firstName} ${p.lastName}`.toLowerCase();
-    let s = 0;
-    for (const t of tokens) {
-      if (p.firstName.toLowerCase() === t || p.lastName.toLowerCase() === t) s += 3;
-      else if (p.firstName.toLowerCase().startsWith(t) || p.lastName.toLowerCase().startsWith(t)) s += 2;
-      else if (full.includes(t)) s += 1;
-    }
-    return s;
-  };
-  return rows
-    .map((p) => ({ p, s: score(p) }))
-    .filter((x) => x.s > 0)
-    .sort((a, b) => b.s - a.s)
+  const scored = rows
+    .map((p) => {
+      const words = [p.firstName, p.lastName].flatMap((n) => n.split(/\s+/));
+      let s = 0;
+      for (const t of tokens) s += Math.max(0, ...words.map((w) => tokenScore(t, w)));
+      return { p, s };
+    })
+    .filter((x) => x.s >= 2)
+    .sort((a, b) => b.s - a.s);
+  // Keep only candidates close to the best; a clear winner stands alone.
+  const best = scored[0]?.s ?? 0;
+  return scored
+    .filter((x) => x.s >= best - 1)
     .slice(0, limit)
     .map(({ p }) => ({ id: p.id, label: `${p.firstName} ${p.lastName}`, detail: p.phone }));
 }
@@ -135,6 +173,9 @@ export async function resolveIntent(
   switch (intent.kind) {
     case "navigate":
       return { kind: "message", text: "", navigateTo: pageHref(intent.page) };
+
+    case "newPatient":
+      return { kind: "message", text: "", navigateTo: `/patients/new?voice=${encodeURIComponent(intent.transcript)}` };
 
     case "query":
       return answerMetric(intent.metric);
