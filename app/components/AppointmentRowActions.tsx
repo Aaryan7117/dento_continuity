@@ -92,7 +92,11 @@ export default function AppointmentRowActions({
     onOpenChange?.(next);
   };
 
+  // Only the open menu listens for outside clicks. Every row used to listen, so a
+  // click on one row's menu made the other rows report "closed" to the schedule,
+  // which dropped the open row's stacking order and hid the menu behind the rows below it.
   useEffect(() => {
+    if (!isOpen) return;
     function handleClickOutside(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setIsOpen(false);
@@ -101,7 +105,7 @@ export default function AppointmentRowActions({
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [onOpenChange]);
+  }, [isOpen, onOpenChange]);
 
   function applyStatus(next: AppointmentStatus, reason?: string) {
     startTransition(async () => {

@@ -10,11 +10,18 @@ const TARGET_RATE = 16000;
 
 export interface Recorder {
   stop(): Promise<Blob>;
+  /** Stops without producing audio. */
+  cancel(): void;
   /** Peak level 0–1 of the latest buffer, for a simple meter. */
   level(): number;
 }
 
-export async function startRecording(): Promise<Recorder> {
+export interface RecorderOptions {
+  /** Called once the first audio frame has arrived: the microphone is really live. */
+  onReady?: () => void;
+}
+
+export async function startRecording(opts: RecorderOptions = {}): Promise<Recorder> {
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
   });
@@ -25,28 +32,42 @@ export async function startRecording(): Promise<Recorder> {
   } catch {
     ctx = new AudioContext();
   }
+  if (ctx.state === "suspended") await ctx.resume().catch(() => undefined);
   const source = ctx.createMediaStreamSource(stream);
   // ScriptProcessorNode is deprecated but universal; an AudioWorklet needs a
   // separately served file, which the desktop build makes awkward.
-  const processor = ctx.createScriptProcessor(4096, 1, 1);
+  const processor = ctx.createScriptProcessor(2048, 1, 1);
   const chunks: Float32Array[] = [];
   let peak = 0;
+  let ready = false;
   processor.onaudioprocess = (e) => {
     const data = e.inputBuffer.getChannelData(0);
     chunks.push(new Float32Array(data));
     let p = 0;
     for (let i = 0; i < data.length; i += 16) p = Math.max(p, Math.abs(data[i]));
     peak = p;
+    if (!ready) {
+      ready = true;
+      opts.onReady?.();
+    }
   };
   source.connect(processor);
   processor.connect(ctx.destination);
 
+  function teardown() {
+    processor.disconnect();
+    source.disconnect();
+    stream.getTracks().forEach((t) => t.stop());
+  }
+
   return {
     level: () => peak,
+    cancel() {
+      teardown();
+      void ctx.close();
+    },
     async stop() {
-      processor.disconnect();
-      source.disconnect();
-      stream.getTracks().forEach((t) => t.stop());
+      teardown();
       const inputRate = ctx.sampleRate;
       await ctx.close();
       const total = chunks.reduce((n, c) => n + c.length, 0);
@@ -60,6 +81,26 @@ export async function startRecording(): Promise<Recorder> {
       return encodeWav(pcm, TARGET_RATE);
     },
   };
+}
+
+/** A short, quiet "go" tone so the user knows the microphone is live without looking. */
+export function playReadyTone() {
+  try {
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.13);
+    osc.onended = () => void ctx.close();
+  } catch {
+    // The tone is a convenience only.
+  }
 }
 
 function resample(input: Float32Array, from: number, to: number): Float32Array {

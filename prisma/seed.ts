@@ -102,6 +102,19 @@ async function main(clinicId: string) {
     data: { clinicId, name: "Blessing Adeniyi", email: "front.desk@dentocontinuity.demo", role: Role.FRONT_DESK, passwordHash },
   });
 
+  await prisma.user.create({
+    data: { clinicId, name: "Clinic Owner", email: "owner@dentocontinuity.demo", role: Role.OWNER, passwordHash },
+  });
+
+  // Chairs are a clinic setting, so they survive reset(); create them only once.
+  for (const name of ["Chair 1", "Chair 2"]) {
+    await prisma.chair.upsert({
+      where: { clinicId_name: { clinicId, name } },
+      update: {},
+      create: { clinicId, name },
+    });
+  }
+
   const dentists = [drAdeleke, drNnamdi];
 
   // ---------------------------------------------------------------------------

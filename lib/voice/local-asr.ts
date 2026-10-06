@@ -169,6 +169,23 @@ export function resampleTo16k(samples: Float32Array, from: number): Float32Array
   return out;
 }
 
+/**
+ * Loads the model ahead of the first clip (about five seconds on a laptop).
+ * Called when a page probes for the engine, so the first command is quick.
+ */
+let warming: Promise<void> | null = null;
+export function warmUp(hotwords: string[] = []): Promise<void> {
+  if (!warming) {
+    warming = getRecognizer(hotwords)
+      .then(() => undefined)
+      .catch(() => undefined)
+      .finally(() => {
+        warming = null;
+      });
+  }
+  return warming;
+}
+
 export interface TranscribeResult {
   text: string;
   engine: NonNullable<LocalAsrInfo["engine"]>;

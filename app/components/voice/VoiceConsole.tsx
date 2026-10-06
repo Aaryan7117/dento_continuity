@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Keyboard, Loader2, Mic, MicOff, X } from "lucide-react";
+import { Check, Keyboard, Loader2, Mic, X } from "lucide-react";
 import { toast } from "sonner";
 import { parseCommand, type Intent } from "@/lib/voice/parse";
 import { executeAction, resolveIntent, type Proposal } from "@/lib/voice-actions";
 import { speak, useSpeech } from "./useSpeech";
+import VoiceIndicator from "./VoiceIndicator";
 
 const EXAMPLES = [
   "Book Priya tomorrow at 5",
@@ -58,14 +59,14 @@ export default function VoiceConsole() {
     function onKey(e: KeyboardEvent) {
       if (e.altKey && e.key.toLowerCase() === "v") {
         e.preventDefault();
-        if (speech.listening) speech.stop();
-        else {
+        if (speech.phase === "listening") speech.stop();
+        else if (speech.phase === "idle") {
           setOpen(true);
           speech.start();
         }
       } else if (e.key === "Escape" && open) {
-        setOpen(false);
-        speech.stop();
+        if (speech.phase !== "idle") speech.cancel();
+        else setOpen(false);
       }
     }
     window.addEventListener("keydown", onKey);
@@ -133,7 +134,7 @@ export default function VoiceConsole() {
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) {
               setOpen(false);
-              speech.stop();
+              speech.cancel();
             }
           }}
         >
@@ -143,63 +144,64 @@ export default function VoiceConsole() {
             className="w-full max-w-lg rounded-2xl border border-line-strong shadow-2xl overflow-hidden"
             style={{ background: "var(--surface)" }}
           >
-            {/* Listening / heard */}
-            <div className="px-5 pt-5 pb-4 flex items-start gap-3" style={{ borderBottom: "1px solid var(--line)" }}>
-              <button
-                onClick={() => (speech.listening ? speech.stop() : speech.start())}
-                disabled={speech.supported === false}
-                className="w-11 h-11 rounded-full flex items-center justify-center text-white shrink-0 disabled:opacity-40"
-                style={{
-                  background: speech.listening ? "#ef4444" : "var(--grad-brand)",
-                  boxShadow: speech.listening ? "0 0 0 8px rgba(239,68,68,0.15)" : undefined,
-                }}
-                title={speech.listening ? "Stop" : "Speak"}
-              >
-                {speech.listening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-              </button>
-              <div className="flex-1 min-w-0">
-                {speech.transcribing ? (
-                  <p className="text-sm flex items-center gap-2" style={{ color: "var(--ink-faint)" }}>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Transcribing on this machine…
-                  </p>
-                ) : speech.listening ? (
-                  <p className="text-sm" style={{ color: "var(--ink)" }}>
-                    {speech.interim || (
-                      <span style={{ color: "var(--ink-faint)" }}>
-                        {speech.engine === "local" ? "Listening… tap the mic again when done." : "Listening…"}
-                      </span>
-                    )}
-                  </p>
-                ) : heard ? (
-                  <p className="text-sm" style={{ color: "var(--ink)" }}>
-                    <span style={{ color: "var(--ink-faint)" }}>Heard: </span>“{heard}”
-                  </p>
-                ) : (
-                  <p className="text-sm" style={{ color: "var(--ink-faint)" }}>
-                    {speech.supported === false
-                      ? "This browser has no speech recognition; type a command instead."
-                      : "Tap the mic and say what you need, or type below."}
-                  </p>
-                )}
-                {speech.error && <p className="text-xs mt-1" style={{ color: "#ef4444" }}>{speech.error}</p>}
-                {!heard && !speech.listening && (
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {EXAMPLES.map((ex) => (
-                      <button
-                        key={ex}
-                        onClick={() => handleText(ex)}
-                        className="text-[11px] px-2 py-1 rounded-md"
-                        style={{ background: "var(--raised)", color: "var(--ink-muted)" }}
-                      >
-                        {ex}
-                      </button>
-                    ))}
-                  </div>
-                )}
+            {/* Microphone and what was heard */}
+            <div className="px-5 pt-5 pb-4 space-y-3" style={{ borderBottom: "1px solid var(--line)" }}>
+              <div className="flex items-start gap-3">
+                <button
+                  onClick={speech.start}
+                  disabled={speech.supported === false || speech.phase !== "idle"}
+                  className="w-11 h-11 rounded-full flex items-center justify-center text-white shrink-0 disabled:opacity-40"
+                  style={{ background: "var(--grad-brand)" }}
+                  title="Speak (Alt+V)"
+                  aria-label="Speak"
+                >
+                  <Mic className="w-5 h-5" />
+                </button>
+                <div className="flex-1 min-w-0">
+                  {speech.phase !== "idle" ? (
+                    <p className="text-sm" style={{ color: "var(--ink-faint)" }}>
+                      {speech.phase === "starting" ? "Getting ready…" : speech.phase === "listening" ? "Say what you need." : "One moment…"}
+                    </p>
+                  ) : heard ? (
+                    <p className="text-sm" style={{ color: "var(--ink)" }}>
+                      <span style={{ color: "var(--ink-faint)" }}>Heard: </span>“{heard}”
+                    </p>
+                  ) : (
+                    <p className="text-sm" style={{ color: "var(--ink-faint)" }}>
+                      {speech.supported === false
+                        ? "This browser has no speech recognition; type a command instead."
+                        : "Tap the mic, wait for the tone, then say what you need. Or type below."}
+                    </p>
+                  )}
+                  {speech.error && <p className="text-xs mt-1" style={{ color: "#ef4444" }}>{speech.error}</p>}
+                  {!heard && speech.phase === "idle" && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {EXAMPLES.map((ex) => (
+                        <button
+                          key={ex}
+                          onClick={() => handleText(ex)}
+                          className="text-[11px] px-2 py-1 rounded-md"
+                          style={{ background: "var(--raised)", color: "var(--ink-muted)" }}
+                        >
+                          {ex}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => {
+                    setOpen(false);
+                    speech.cancel();
+                  }}
+                  className="p-1"
+                  style={{ color: "var(--ink-faint)" }}
+                  aria-label="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-              <button onClick={() => { setOpen(false); speech.stop(); }} className="p-1" style={{ color: "var(--ink-faint)" }} aria-label="Close">
-                <X className="w-4 h-4" />
-              </button>
+              <VoiceIndicator speech={speech} />
             </div>
 
             {/* Proposal */}

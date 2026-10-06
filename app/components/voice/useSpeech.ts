@@ -1,16 +1,22 @@
 "use client";
 
 /**
- * Thin wrapper over the browser's speech recognition (Chrome, Edge, Safari 14+).
- * Push-to-talk: `start()` listens until `stop()` or a pause; the final text is
- * handed to `onResult`. Swapping the engine later (on-device or a cloud API)
- * means replacing this hook only.
+ * One hook for speech input, whichever engine is live:
+ *  - "local": the browser records 16 kHz WAV and the server's sherpa-onnx model transcribes it;
+ *  - "browser": the Web Speech API (Chrome/Edge; audio goes to the browser vendor).
+ *
+ * Push-to-talk with honest phases, so the UI can show them:
+ *   idle → starting (microphone being opened; do not speak yet)
+ *        → listening (first audio frame has arrived; a tone confirms it)
+ *        → transcribing (clip handed to the model)
+ *        → idle, with the text passed to `onResult`.
  */
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { startRecording, type Recorder } from "./recorder";
+import { playReadyTone, startRecording, type Recorder } from "./recorder";
 
 export type SpeechEngine = "local" | "browser" | "none";
+export type SpeechPhase = "idle" | "starting" | "listening" | "transcribing";
 
 /** Asked once per page load: does this server hold a speech model? */
 let localProbe: Promise<boolean> | null = null;
@@ -24,8 +30,8 @@ function probeLocal(): Promise<boolean> {
   return localProbe;
 }
 
-/** Push-to-talk clips longer than this are cut off; commands are short. */
-const MAX_LOCAL_SECONDS = 20;
+/** Push-to-talk clips longer than this are cut off; commands and form fills are short. */
+export const MAX_LOCAL_SECONDS = 30;
 
 type RecognitionCtor = new () => SpeechRecognitionLike;
 interface SpeechRecognitionLike {
@@ -33,6 +39,7 @@ interface SpeechRecognitionLike {
   continuous: boolean;
   interimResults: boolean;
   maxAlternatives: number;
+  onaudiostart: (() => void) | null;
   onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }> }) => void) | null;
   onerror: ((e: { error: string }) => void) | null;
   onend: (() => void) | null;
@@ -56,14 +63,17 @@ export function useSpeech(onResult: (text: string) => void, lang = "en-IN") {
     () => getCtor() !== null,
     () => null
   );
-  const [listening, setListening] = useState(false);
-  const [transcribing, setTranscribing] = useState(false);
+  const [phase, setPhase] = useState<SpeechPhase>("idle");
+  const [seconds, setSeconds] = useState(0);
   const [interim, setInterim] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [engine, setEngine] = useState<SpeechEngine | null>(null);
   const recRef = useRef<SpeechRecognitionLike | null>(null);
   const recorderRef = useRef<Recorder | null>(null);
   const cutoffRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startedAtRef = useRef(0);
+  const cancelledRef = useRef(false);
 
   // Prefer the model on our own machine; fall back to the browser recogniser.
   useEffect(() => {
@@ -81,13 +91,27 @@ export function useSpeech(onResult: (text: string) => void, lang = "en-IN") {
     onResultRef.current = onResult;
   }, [onResult]);
 
+  const stopTimers = useCallback(() => {
+    if (cutoffRef.current) clearTimeout(cutoffRef.current);
+    if (tickRef.current) clearInterval(tickRef.current);
+    cutoffRef.current = null;
+    tickRef.current = null;
+  }, []);
+
+  const beginListening = useCallback(() => {
+    startedAtRef.current = Date.now();
+    setSeconds(0);
+    setPhase("listening");
+    playReadyTone();
+    tickRef.current = setInterval(() => setSeconds(Math.floor((Date.now() - startedAtRef.current) / 1000)), 250);
+  }, []);
+
   const finishLocal = useCallback(async () => {
     const recorder = recorderRef.current;
     if (!recorder) return;
     recorderRef.current = null;
-    if (cutoffRef.current) clearTimeout(cutoffRef.current);
-    setListening(false);
-    setTranscribing(true);
+    stopTimers();
+    setPhase("transcribing");
     try {
       const wav = await recorder.stop();
       const res = await fetch("/api/voice/transcribe", {
@@ -99,6 +123,7 @@ export function useSpeech(onResult: (text: string) => void, lang = "en-IN") {
       const data = (await res.json()) as { text: string };
       setInterim("");
       if (data.text) onResultRef.current(data.text);
+      else setError("Nothing was heard. Wait for the tone, then speak close to the microphone.");
     } catch (e) {
       setError(
         e instanceof Error && e.message.includes("404")
@@ -106,28 +131,49 @@ export function useSpeech(onResult: (text: string) => void, lang = "en-IN") {
           : "Could not transcribe; try again."
       );
     } finally {
-      setTranscribing(false);
+      setPhase("idle");
     }
-  }, []);
+  }, [stopTimers]);
 
   const stop = useCallback(() => {
     if (recorderRef.current) void finishLocal();
     else recRef.current?.stop();
   }, [finishLocal]);
 
+  /** Throws the clip away: nothing is transcribed, nothing is filled. */
+  const cancel = useCallback(() => {
+    stopTimers();
+    cancelledRef.current = true;
+    if (recorderRef.current) {
+      recorderRef.current.cancel();
+      recorderRef.current = null;
+    }
+    recRef.current?.abort();
+    setInterim("");
+    setPhase("idle");
+  }, [stopTimers]);
+
   const startLocal = useCallback(async () => {
     setError(null);
     setInterim("");
+    cancelledRef.current = false;
+    setPhase("starting");
     try {
-      recorderRef.current = await startRecording();
-      setListening(true);
+      const recorder = await startRecording({ onReady: () => beginListening() });
+      if (cancelledRef.current) {
+        recorder.cancel();
+        return;
+      }
+      recorderRef.current = recorder;
       cutoffRef.current = setTimeout(() => void finishLocal(), MAX_LOCAL_SECONDS * 1000);
     } catch {
+      setPhase("idle");
       setError("Microphone access is blocked for this site.");
     }
-  }, [finishLocal]);
+  }, [beginListening, finishLocal]);
 
   const start = useCallback(() => {
+    if (phase !== "idle") return;
     if (engine === "local") {
       void startLocal();
       return;
@@ -143,7 +189,10 @@ export function useSpeech(onResult: (text: string) => void, lang = "en-IN") {
     finalRef.current = "";
     setInterim("");
     setError(null);
+    cancelledRef.current = false;
+    setPhase("starting");
 
+    rec.onaudiostart = () => beginListening();
     rec.onresult = (e) => {
       let finalText = "";
       let interimText = "";
@@ -158,32 +207,54 @@ export function useSpeech(onResult: (text: string) => void, lang = "en-IN") {
     };
     rec.onerror = (e) => {
       // "no-speech" and "aborted" are ordinary; everything else is worth showing.
-      if (e.error !== "no-speech" && e.error !== "aborted") {
+      if (e.error === "no-speech") setError("Nothing was heard. Wait for the tone, then speak.");
+      else if (e.error !== "aborted") {
         setError(e.error === "not-allowed" ? "Microphone access is blocked for this site." : `Speech error: ${e.error}`);
       }
     };
     rec.onend = () => {
-      setListening(false);
+      stopTimers();
+      setPhase("idle");
       const text = finalRef.current.trim();
       setInterim("");
-      if (text) onResultRef.current(text);
+      if (text && !cancelledRef.current) onResultRef.current(text);
     };
     recRef.current = rec;
-    setListening(true);
     rec.start();
-  }, [lang, engine, startLocal]);
+  }, [lang, engine, phase, startLocal, beginListening, stopTimers]);
+
+  // Read by the meter's animation frame, never during render.
+  const level = useCallback(() => recorderRef.current?.level() ?? 0, []);
 
   useEffect(
     () => () => {
       recRef.current?.abort();
+      recorderRef.current?.cancel();
       if (cutoffRef.current) clearTimeout(cutoffRef.current);
+      if (tickRef.current) clearInterval(tickRef.current);
     },
     []
   );
 
   const usable = engine === null ? supported : engine !== "none";
-  return { supported: usable, engine, listening, transcribing, interim, error, start, stop };
+  return {
+    supported: usable,
+    engine,
+    phase,
+    listening: phase === "listening" || phase === "starting",
+    transcribing: phase === "transcribing",
+    seconds,
+    interim,
+    error,
+    /** Peak input level 0–1 (local engine only; 0 for the browser engine). */
+    level,
+    start,
+    stop,
+    cancel,
+  };
 }
+
+export type Speech = ReturnType<typeof useSpeech>;
 
 /** Reads a short answer aloud when the browser can. Silent elsewhere. */
 export function speak(text: string) {

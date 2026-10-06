@@ -11,8 +11,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as chrono from "chrono-node";
-import { Loader2, Mic, MicOff } from "lucide-react";
+import { Loader2, Mic } from "lucide-react";
 import { useSpeech } from "./useSpeech";
+import VoiceIndicator from "./VoiceIndicator";
 import { wordsToDigits } from "@/lib/voice/numbers";
 
 export interface VoiceField {
@@ -169,34 +170,58 @@ export default function VoiceFill({
     }
   }, [initialTranscript, apply]);
 
+  // Escape throws a recording away, from anywhere on the form.
+  useEffect(() => {
+    if (speech.phase === "idle") return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        speech.cancel();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [speech.phase, speech.cancel, speech]);
+
   if (speech.supported === false) return null;
+  const idle = speech.phase === "idle";
 
   return (
     <div
-      className="rounded-xl px-3.5 py-3 flex items-start gap-3"
-      style={{ background: "rgb(var(--brand-rgb) / 0.06)", border: "1px solid rgb(var(--brand-rgb) / 0.2)" }}
+      className="rounded-xl px-3.5 py-3 space-y-2"
+      style={{
+        background: idle ? "rgb(var(--brand-rgb) / 0.06)" : "var(--surface)",
+        border: `1px solid ${idle ? "rgb(var(--brand-rgb) / 0.2)" : "var(--line)"}`,
+      }}
     >
-      <button
-        type="button"
-        onClick={() => (speech.listening ? speech.stop() : speech.start())}
-        className="w-9 h-9 rounded-full flex items-center justify-center text-white shrink-0"
-        style={{ background: speech.listening ? "#ef4444" : "var(--grad-brand)" }}
-        title={speech.listening ? "Stop" : "Fill by voice"}
-      >
-        {speech.listening ? <MicOff className="w-4 h-4" /> : speech.supported === null ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
-      </button>
-      <div className="text-xs min-w-0" style={{ color: "var(--ink-muted)" }}>
-        <p className="font-semibold" style={{ color: "var(--ink)" }}>
-          {speech.listening ? (speech.interim || "Listening…") : "Fill by voice"}
-        </p>
-        {!speech.listening && !last && <p className="mt-0.5">{hint}</p>}
-        {!speech.listening && last && (
-          <p className="mt-0.5">
-            Heard “{last.heard}”. {last.filled.length ? `Filled ${last.filled.length} field${last.filled.length === 1 ? "" : "s"}; please check them.` : "No fields matched; try naming them, e.g. “phone 98765 43210”."}
-          </p>
-        )}
-        {speech.error && <p className="mt-0.5" style={{ color: "#ef4444" }}>{speech.error}</p>}
-      </div>
+      {idle && (
+        <div className="flex items-start gap-3">
+          <button
+            type="button"
+            onClick={speech.start}
+            disabled={speech.supported === null}
+            className="w-9 h-9 rounded-full flex items-center justify-center text-white shrink-0 disabled:opacity-60"
+            style={{ background: "var(--grad-brand)" }}
+            title="Fill by voice"
+          >
+            {speech.supported === null ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
+          </button>
+          <div className="text-xs min-w-0" style={{ color: "var(--ink-muted)" }}>
+            <p className="font-semibold" style={{ color: "var(--ink)" }}>Fill by voice</p>
+            {!last && <p className="mt-0.5">{hint}</p>}
+            {last && (
+              <p className="mt-0.5">
+                Heard “{last.heard}”.{" "}
+                {last.filled.length
+                  ? `Filled ${last.filled.length} field${last.filled.length === 1 ? "" : "s"}; please check them.`
+                  : "No fields matched; try naming them, e.g. “phone 98765 43210”."}
+              </p>
+            )}
+            {speech.error && <p className="mt-0.5" style={{ color: "#ef4444" }}>{speech.error}</p>}
+          </div>
+        </div>
+      )}
+      <VoiceIndicator speech={speech} stopLabel="Stop & fill" prompt="Say the details, e.g. “first name Ravi, last name Kumar, phone 98765 43210”." />
     </div>
   );
 }
