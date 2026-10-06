@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { createPatient } from "@/lib/actions";
 import { UserPlus, ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
+import VoiceFill from "@/app/components/voice/VoiceFill";
 
 export default function NewPatientPage() {
   const router = useRouter();
@@ -88,6 +89,18 @@ export default function NewPatientPage() {
 
       <div className="card p-7">
         <form onSubmit={handleSubmit} className="space-y-5">
+          <VoiceFill
+            hint="Say it in one go: “Priya Sharma, phone 98765 43210, born 14 March 1990, email priya at gmail dot com, consent yes”."
+            fields={[
+              { name: "firstName", aliases: ["first name", "given name"], type: "text" },
+              { name: "lastName", aliases: ["last name", "surname", "family name"], type: "text" },
+              { name: "phone", aliases: ["phone", "mobile", "number", "contact"], type: "phone" },
+              { name: "dateOfBirth", aliases: ["born", "date of birth", "birthday", "dob", "born on"], type: "date" },
+              { name: "email", aliases: ["email", "e-mail", "mail"], type: "email" },
+              { name: "address", aliases: ["address", "lives at", "staying at"], type: "text" },
+              { name: "consentGiven", aliases: ["consent"], type: "checkbox" },
+            ]}
+          />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-1.5 stagger-item">
               <label className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
