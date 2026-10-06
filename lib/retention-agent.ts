@@ -14,6 +14,8 @@
  */
 
 import { prisma } from "@/lib/db";
+import { currentClinicId } from "@/lib/tenant";
+import { issuePatientLinkUrl } from "@/lib/patient-links";
 import { recordAudit } from "@/lib/audit";
 import { toRecommendation } from "@/lib/serializers";
 import type { Actor } from "@/lib/actors";
@@ -133,14 +135,22 @@ async function writeRecommendation(
   appointment: NoShowWithHistory
 ): Promise<Recommendation> {
   const draft = buildDraft(appointment);
+  const clinicId = await currentClinicId();
+  // The patient can rebook from the link without calling the clinic.
+  const link = await issuePatientLinkUrl({
+    patientId: appointment.patientId,
+    clinicId,
+    appointmentId: appointment.id,
+  });
 
   const row = await prisma.recommendation.create({
     data: {
+      clinicId,
       patientId: appointment.patientId,
       appointmentId: appointment.id,
       status: "PENDING",
       reason: draft.reason,
-      draftMessage: draft.message,
+      draftMessage: `${draft.message} Pick a new time here: ${link}`,
       channel: "SMS",
     },
   });
