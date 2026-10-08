@@ -47,16 +47,17 @@ export default function StatusBadge({
   const label = status.replace(/_/g, " ");
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2 py-[3px] rounded-md text-[11px] font-semibold uppercase tracking-wide ${className}`}
+      className={`inline-flex items-center gap-1.5 px-2 py-[2.5px] rounded-md text-[11px] font-semibold uppercase tracking-wide border border-transparent transition-colors ${className}`}
       style={{
         background: `rgb(var(--tone-${tone}) / 0.12)`,
         color: `var(--tone-${tone}-ink)`,
+        borderColor: `rgb(var(--tone-${tone}) / 0.22)`,
       }}
       data-no-press
     >
       <span
         className="w-1.5 h-1.5 rounded-full shrink-0"
-        style={{ background: DOTS[tone] }}
+        style={{ background: `var(--tone-${tone}-ink)` }}
       />
       {label}
     </span>

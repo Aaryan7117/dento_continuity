@@ -94,7 +94,7 @@ export default function SmartWaitlist({
       <div
         className="fixed right-0 top-0 bottom-0 w-full max-w-md z-50 flex flex-col"
         style={{
-          background: "var(--canvas)",
+          background: "var(--surface-elevated)",
           borderLeft: "1px solid var(--line)",
           boxShadow: "-8px 0 32px var(--shadow-contact)",
           animation: "slideInRight 250ms var(--ease-drawer) forwards",

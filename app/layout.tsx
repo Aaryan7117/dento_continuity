@@ -41,7 +41,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+        <script
+          async
+          dangerouslySetInnerHTML={{ __html: themeInit }}
+        />
       </head>
       <body className="min-h-full flex flex-col font-sans antialiased">
         {children}

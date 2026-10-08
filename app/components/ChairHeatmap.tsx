@@ -30,22 +30,19 @@ function formatWeekRange(start: Date): string {
 }
 
 function getCellColor(count: number, max: number): string {
-  if (count === 0) return "var(--raised)";
+  if (count === 0) return "var(--surface-secondary)";
   const intensity = max > 0 ? count / max : 0;
-  // Deep teal gradient
-  if (intensity <= 0.25) return "rgb(var(--brand-rgb) / 0.12)";
-  if (intensity <= 0.5) return "rgb(var(--brand-rgb) / 0.28)";
-  if (intensity <= 0.75) return "rgb(var(--brand-rgb) / 0.5)";
-  return "rgb(var(--brand-rgb) / 0.75)";
+  if (intensity <= 0.25) return "rgb(var(--brand-rgb) / 0.18)";
+  if (intensity <= 0.5) return "rgb(var(--brand-rgb) / 0.38)";
+  if (intensity <= 0.75) return "rgb(var(--brand-rgb) / 0.65)";
+  return "var(--brand)";
 }
 
 function getCellTextColor(count: number, max: number): string {
   if (count === 0) return "var(--ink-faint)";
   const intensity = max > 0 ? count / max : 0;
   if (intensity <= 0.5) return "var(--brand)";
-  // The dense cells are near-opaque brand, so the readable text is whatever
-  // contrasts with brand — white in light mode, dark in dark mode.
-  return "var(--canvas)";
+  return "#ffffff";
 }
 
 export default function ChairHeatmap() {
@@ -194,9 +191,10 @@ export default function ChairHeatmap() {
                       <div
                         className="absolute -top-9 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg text-[10px] font-semibold whitespace-nowrap z-20"
                         style={{
-                          background: "var(--ink)",
-                          color: "var(--canvas)",
-                          boxShadow: "0 4px 12px var(--shadow-ambient)",
+                          background: "var(--surface-elevated)",
+                          color: "var(--ink)",
+                          border: "1px solid var(--line)",
+                          boxShadow: "0 8px 24px var(--shadow-ambient)",
                         }}
                       >
                         {dayLabel} {HOUR_LABELS[hourOffset]}: {count} appt{count !== 1 ? "s" : ""}

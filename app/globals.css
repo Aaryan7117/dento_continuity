@@ -63,16 +63,28 @@
    That's what lets `bg-surface text-ink` serve both themes with no dark: variant. */
 @theme inline {
   --color-canvas: var(--canvas);
+  --color-sidebar: var(--sidebar-bg);
+  --color-topbar: var(--topbar-bg);
   --color-surface: var(--surface);
-  --color-raised: var(--raised);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-interactive: var(--surface-interactive);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --color-ink: var(--ink);
+  --color-ink-secondary: var(--ink-secondary);
   --color-ink-muted: var(--ink-muted);
   --color-ink-faint: var(--ink-faint);
   --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-active: var(--brand-active);
   --color-brand-soft: var(--brand-soft);
   --color-accent: var(--accent);
+  --color-accent-blue: var(--accent-blue);
+  --color-accent-violet: var(--accent-violet);
+  --color-accent-mint: var(--accent-mint);
+  --color-accent-amber: var(--accent-amber);
+  --color-accent-red: var(--accent-red);
 }
 
 /* ── Custom easing curves (Emil Kowalski) ── */
@@ -85,57 +97,113 @@
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-/* ── Light: warm porcelain ── */
+/* ── Light: clinical, crisp healthcare palette matching reference ── */
 :root {
   color-scheme: light;
-  --canvas: #fafaf9;
+  --canvas: #f4f7f9;
+  --sidebar-bg: #ffffff;
+  --topbar-bg: #ffffff;
   --surface: #ffffff;
-  --raised: #f5f5f4;
-  --line: rgba(28, 25, 23, 0.09);
-  --line-strong: rgba(28, 25, 23, 0.16);
-  --ink: #1c1917;
-  --ink-muted: #6b6259;
-  --ink-faint: #8f867e;
-  --brand: #019d8e;
-  --brand-soft: rgba(1, 157, 142, 0.09);
+  --surface-secondary: #f8fafc;
+  --surface-elevated: #ffffff;
+  --surface-interactive: #f1f5f9;
+  --raised: #f1f5f9;
+  --line: rgba(226, 232, 240, 0.85);
+  --line-strong: rgba(203, 213, 225, 0.9);
+  --ink: #0f172a;
+  --ink-secondary: #334155;
+  --ink-muted: #475569;
+  --ink-faint: #94a3b8;
+  --brand: #0d9488;
+  --brand-hover: #0f766e;
+  --brand-active: #115e59;
+  --brand-soft: rgba(13, 148, 136, 0.08);
   /* Triplet form so alpha washes can be written rgb(var(--brand-rgb) / 0.1)
      and still follow the theme. */
-  --brand-rgb: 1 157 142;
+  --brand-rgb: 13 148 136;
   --accent: #b8942b;
+  --accent-blue: #2563eb;
+  --accent-violet: #7c3aed;
+  --accent-mint: #059669;
+  --accent-amber: #d97706;
+  --accent-red: #dc2626;
 
-  --shadow-contact: rgba(28, 25, 23, 0.05);
-  --shadow-ambient: rgba(28, 25, 23, 0.07);
-  --glass-tint: rgba(255, 255, 255, 0.72);
-  --glass-edge: rgba(255, 255, 255, 0.5);
-  --scrim: rgba(28, 25, 23, 0.5);
-  --scrollbar: rgba(120, 113, 108, 0.25);
-  --scrollbar-hover: rgba(120, 113, 108, 0.45);
+  --shadow-contact: rgba(15, 23, 42, 0.04);
+  --shadow-ambient: rgba(15, 23, 42, 0.07);
+  --glass-tint: rgba(255, 255, 255, 0.85);
+  --glass-edge: rgba(255, 255, 255, 0.7);
+  --scrim: rgba(15, 23, 42, 0.45);
+  --scrollbar: rgba(148, 163, 184, 0.25);
+  --scrollbar-hover: rgba(148, 163, 184, 0.45);
 }
 
-/* ── Dark: warm charcoal, not blue-black. Brand and accent lighten so they
-   still clear contrast against a dark surface. ── */
-.dark {
+/* ── Dark Mode Design System ──
+   Layered, calm, sophisticated clinical dark palette:
+   #0B1117 canvas, #0A1015 sidebar, #0D141B top bar,
+   #111B25 surface, #152231 secondary, #19283A elevated. ── */
+.dark,
+[data-theme="dark"] {
   color-scheme: dark;
-  --canvas: #14110f;
-  --surface: #1c1917;
-  --raised: #262220;
-  --line: rgba(250, 250, 249, 0.10);
-  --line-strong: rgba(250, 250, 249, 0.18);
-  --ink: #fafaf9;
-  --ink-muted: #b5aca4;
-  --ink-faint: #8a8079;
-  --brand: #1edec6;
-  --brand-soft: rgba(30, 222, 198, 0.12);
-  --brand-rgb: 30 222 198;
-  --accent: #e5c368;
+  --canvas: #0B1117;             /* APP BACKGROUND */
+  --sidebar-bg: #0A1015;         /* SIDEBAR */
+  --topbar-bg: #0D141B;          /* TOP BAR */
+  --surface: #111B25;            /* PRIMARY SURFACE */
+  --surface-secondary: #152231;  /* SECONDARY SURFACE */
+  --surface-elevated: #19283A;   /* ELEVATED SURFACE */
+  --surface-interactive: #1E3146;/* ACTIVE / HOVER SURFACE */
+  --raised: #152231;             /* RAISED SURFACE */
+  
+  --line: rgba(160, 190, 210, 0.12); /* BORDER */
+  --line-strong: rgba(160, 190, 210, 0.22);
+  
+  --ink: #F4F8FA;                /* PRIMARY TEXT */
+  --ink-secondary: #A7B7C7;      /* SECONDARY TEXT */
+  --ink-muted: #718295;          /* MUTED TEXT */
+  --ink-faint: #4E5E70;          /* FAINT TEXT */
+  
+  /* Primary Brand: DENTO teal / turquoise */
+  --brand: #00B8A9;              /* PRIMARY BRAND */
+  --brand-hover: #12CFC0;
+  --brand-active: #0E9F94;
+  --brand-soft: rgba(0, 184, 169, 0.12);
+  --brand-rgb: 0 184 169;
+  
+  /* Supporting accents */
+  --accent-blue: #4F8CFF;
+  --accent-violet: #8B7CFF;
+  --accent-mint: #42D7B5;
+  --accent-amber: #F6A623;
+  --accent-red: #FF5C6C;
+  --accent: #F6A623;
 
-  --shadow-contact: rgba(0, 0, 0, 0.45);
-  --shadow-ambient: rgba(0, 0, 0, 0.6);
-  --glass-tint: rgba(28, 25, 23, 0.72);
-  --glass-edge: rgba(250, 250, 249, 0.08);
-  --scrim: rgba(10, 8, 7, 0.66);
-  --scrollbar: rgba(250, 250, 249, 0.18);
-  --scrollbar-hover: rgba(250, 250, 249, 0.34);
+  /* Shadows: very soft dark shadow */
+  --shadow-contact: rgba(0, 0, 0, 0.35);
+  --shadow-ambient: rgba(3, 7, 12, 0.55);
+  --glass-tint: rgba(17, 27, 37, 0.85);
+  --glass-edge: rgba(160, 190, 210, 0.12);
+  --scrim: rgba(5, 9, 13, 0.75);
+  --scrollbar: rgba(160, 190, 210, 0.16);
+  --scrollbar-hover: rgba(160, 190, 210, 0.32);
+
+  /* Status Tones */
+  --tone-sky: 79 140 255;
+  --tone-indigo: 79 140 255;
+  --tone-emerald: 66 215 181;
+  --tone-amber: 246 166 35;
+  --tone-red: 255 92 108;
+  --tone-neutral: 167 183 199;
+  --tone-violet: 139 124 255;
+
+  --tone-sky-ink: #4F8CFF;
+  --tone-indigo-ink: #4F8CFF;
+  --tone-emerald-ink: #42D7B5;
+  --tone-amber-ink: #F6A623;
+  --tone-red-ink: #FF5C6C;
+  --tone-neutral-ink: #A7B7C7;
+  --tone-violet-ink: #8B7CFF;
+
+  --grad-brand: linear-gradient(135deg, #00B8A9, #0E9F94);
+  --grad-brand-deep: linear-gradient(135deg, #0E4E49, #072F2D);
 }
 
 /* ── Form Controls & Select Options ── */
@@ -152,15 +220,11 @@ select option {
 
 .dark select option,
 [data-theme="dark"] select option {
-  background-color: #1c1917 !important;
-  color: #fafaf9 !important;
+  background-color: #111B25 !important;
+  color: #F4F8FA !important;
 }
 
-/* ── Status tones ──
-   Each tone is an rgb triplet for alpha washes, plus a text colour that flips:
-   a 700-weight ink that reads on white is unreadable on charcoal, and the
-   200-weight that reads on charcoal disappears on white. The saturated dot
-   colour is shared, since a filled dot carries its own contrast. */
+/* ── Status tones ── */
 :root {
   --tone-sky: 14 165 233;
   --tone-indigo: 99 102 241;
@@ -177,25 +241,31 @@ select option {
   --tone-red-ink: #b91c1c;
   --tone-neutral-ink: #57534e;
   --tone-violet-ink: #6d28d9;
-}
 
-.dark {
-  --tone-sky-ink: #7dd3fc;
-  --tone-indigo-ink: #a5b4fc;
-  --tone-emerald-ink: #6ee7b7;
-  --tone-amber-ink: #fcd34d;
-  --tone-red-ink: #fca5a5;
-  --tone-neutral-ink: #d6d3d1;
-  --tone-violet-ink: #c4b5fd;
-}
-
-/* ── Brand gradients ──
-   Deliberately the same in both themes. These are self-contained filled chips
-   (avatars, logo mark, primary buttons) carrying white text, so their contrast
-   comes from the fill, not from the page behind them. */
-:root {
   --grad-brand: linear-gradient(135deg, #019d8e, #067d73);
   --grad-brand-deep: linear-gradient(135deg, #019d8e, #0d524d);
+}
+
+.dark,
+[data-theme="dark"] {
+  --tone-sky: 79 140 255;
+  --tone-indigo: 79 140 255;
+  --tone-emerald: 66 215 181;
+  --tone-amber: 246 166 35;
+  --tone-red: 255 92 108;
+  --tone-neutral: 167 183 199;
+  --tone-violet: 139 124 255;
+
+  --tone-sky-ink: #4F8CFF;
+  --tone-indigo-ink: #4F8CFF;
+  --tone-emerald-ink: #42D7B5;
+  --tone-amber-ink: #F6A623;
+  --tone-red-ink: #FF5C6C;
+  --tone-neutral-ink: #A7B7C7;
+  --tone-violet-ink: #8B7CFF;
+
+  --grad-brand: linear-gradient(135deg, #00B8A9, #0E9F94);
+  --grad-brand-deep: linear-gradient(135deg, #0E4E49, #072F2D);
 }
 
 body {
@@ -209,38 +279,27 @@ body {
 
 /* ── Typography: size-specific tracking & leading ── */
 h1, h2, h3 {
-  letter-spacing: 0;
-  line-height: 1.15;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
 }
 
-h1 { letter-spacing: 0; }
+h1 { letter-spacing: -0.02em; }
 
 p, span, td, th, label, li {
   letter-spacing: 0;
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
 small, .text-xs, .text-sm {
   letter-spacing: 0.01em;
 }
 
-/* ── Button: press feedback — the #1 missing detail ── */
-button, [role="button"], a[href] {
-  /* NO blanket transition — each component owns its own */
-}
-
-@media (hover: hover) and (pointer: fine) {
-  button:hover, [role="button"]:hover {
-    /* Components define their own hovers */
-  }
-}
-
+/* ── Button: press feedback ── */
 button:active, [role="button"]:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
   transition: transform 100ms var(--ease-out);
 }
 
-/* Exempt tiny inline elements from scale (badges, etc.) */
 button.no-press:active, [data-no-press]:active {
   transform: none;
 }
@@ -316,22 +375,105 @@ button.no-press:active, [data-no-press]:active {
   animation: pulseRing 2s ease-in-out infinite;
 }
 
-/* ── Card & surface styling ── */
+/* ── Card & surface depth hierarchy ── */
 .card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 16px;
-  box-shadow: 0 1px 3px var(--shadow-contact), 0 1px 2px var(--shadow-contact);
-  transition: box-shadow 200ms var(--ease-out);
+  border-radius: 18px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03), 0 6px 16px -4px rgba(15, 23, 42, 0.04);
+  transition: box-shadow 200ms var(--ease-out), transform 200ms var(--ease-out), border-color 200ms var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .card:hover {
-    box-shadow: 0 4px 12px var(--shadow-ambient), 0 1px 3px var(--shadow-contact);
+    box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.06), 0 12px 24px -4px rgba(15, 23, 42, 0.06);
   }
 }
 
-/* ── Glassmorphism (Apple-style translucent chrome) ── */
+.dark .card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 4px 20px -2px rgba(3, 7, 12, 0.5), 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .dark .card:hover {
+    box-shadow: 0 8px 30px -4px rgba(3, 7, 12, 0.7), 0 2px 6px rgba(0, 0, 0, 0.45);
+    border-color: rgba(160, 190, 210, 0.18);
+    transform: translateY(-1px);
+  }
+}
+
+/* ── Micro-Gradients ── */
+.grad-hero {
+  background: linear-gradient(135deg, #111B25 0%, #152231 100%);
+}
+
+.grad-kpi-teal,
+.kpi-card-teal {
+  background-color: #ffffff;
+}
+.dark .grad-kpi-teal,
+.dark .kpi-card-teal {
+  background: linear-gradient(135deg, rgba(0, 184, 169, 0.08) 0%, #111B25 100%) !important;
+  background-color: #111B25 !important;
+}
+
+.grad-kpi-blue,
+.kpi-card-blue {
+  background-color: #ffffff;
+}
+.dark .grad-kpi-blue,
+.dark .kpi-card-blue {
+  background: linear-gradient(135deg, rgba(79, 140, 255, 0.08) 0%, #111B25 100%) !important;
+  background-color: #111B25 !important;
+}
+
+.grad-kpi-violet,
+.kpi-card-violet {
+  background-color: #ffffff;
+}
+.dark .grad-kpi-violet,
+.dark .kpi-card-violet {
+  background: linear-gradient(135deg, rgba(139, 124, 255, 0.08) 0%, #111B25 100%) !important;
+  background-color: #111B25 !important;
+}
+
+.grad-kpi-mint,
+.kpi-card-mint {
+  background-color: #ffffff;
+}
+.dark .grad-kpi-mint,
+.dark .kpi-card-mint {
+  background: linear-gradient(135deg, rgba(66, 215, 181, 0.08) 0%, #111B25 100%) !important;
+  background-color: #111B25 !important;
+}
+
+.grad-continuity {
+  background: linear-gradient(145deg, #111B25 0%, #152231 100%);
+}
+
+.grad-impact {
+  background: linear-gradient(135deg, rgba(0, 184, 169, 0.12) 0%, #111B25 100%);
+}
+
+/* ── Modern Clinical Table Row Interactive Hover ── */
+.table-row-interactive {
+  transition: background-color 180ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms ease;
+}
+
+.table-row-interactive:hover {
+  background-color: rgba(241, 245, 249, 0.75);
+}
+
+.dark .table-row-interactive:hover,
+.dark .stagger-row:hover,
+.dark tbody tr:hover {
+  background-color: #162536 !important;
+}
+
+/* ── Glassmorphism ── */
 .glass {
   background: var(--glass-tint);
   backdrop-filter: blur(20px) saturate(180%);
@@ -339,20 +481,20 @@ button.no-press:active, [data-no-press]:active {
   border-bottom: 1px solid var(--glass-edge);
 }
 
-/* ── Primary action button ──
-   Defined once so the white-on-teal pairing can't drift out of contrast when
-   the theme flips: the fill is a fixed gradient, so white always reads on it. */
+/* ── Primary action button ── */
 .btn-primary {
   background: var(--grad-brand);
   color: #ffffff;
   font-weight: 600;
-  box-shadow: 0 1px 2px var(--shadow-contact);
-  transition: box-shadow 200ms var(--ease-out), opacity 200ms var(--ease-out);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px var(--shadow-contact);
+  transition: box-shadow 200ms var(--ease-out), transform 150ms var(--ease-out), filter 150ms var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .btn-primary:hover:not(:disabled) {
-    box-shadow: 0 4px 14px rgb(var(--brand-rgb) / 0.32);
+    box-shadow: 0 4px 18px rgba(0, 184, 169, 0.35);
+    filter: brightness(1.06);
   }
 }
 
@@ -360,9 +502,164 @@ button.no-press:active, [data-no-press]:active {
   opacity: 0.5;
 }
 
-/* ── Theme toggle icons ──
-   Driven by the .dark class rather than React state, so the correct icon is
-   already right at first paint and there's no cross-fade on load. */
+/* ── Secondary action button ── */
+.btn-secondary {
+  background: var(--surface-secondary);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-weight: 500;
+  border-radius: 12px;
+  transition: all 180ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--surface-interactive);
+    border-color: rgba(0, 184, 169, 0.3);
+    color: var(--ink);
+  }
+}
+
+/* ── Inputs & Form Controls ── */
+.dark input[type="text"],
+.dark input[type="search"],
+.dark input[type="date"],
+.dark input[type="datetime-local"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="number"],
+.dark input[type="tel"],
+.dark textarea {
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  border-radius: 12px;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: var(--ink-muted);
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: var(--brand) !important;
+  box-shadow: 0 0 0 3px rgba(0, 184, 169, 0.18) !important;
+  outline: none !important;
+}
+
+/* ── Status Badges ── */
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.dark .badge-confirmed {
+  background: rgba(79, 140, 255, 0.12);
+  color: #4F8CFF;
+  border: 1px solid rgba(79, 140, 255, 0.25);
+}
+
+.dark .badge-completed {
+  background: rgba(66, 215, 181, 0.12);
+  color: #42D7B5;
+  border: 1px solid rgba(66, 215, 181, 0.25);
+}
+
+.dark .badge-scheduled {
+  background: rgba(0, 184, 169, 0.12);
+  color: #00B8A9;
+  border: 1px solid rgba(0, 184, 169, 0.25);
+}
+
+.dark .badge-cancelled {
+  background: rgba(255, 92, 108, 0.12);
+  color: #FF5C6C;
+  border: 1px solid rgba(255, 92, 108, 0.25);
+}
+
+.dark .badge-pending {
+  background: rgba(246, 166, 35, 0.12);
+  color: #F6A623;
+  border: 1px solid rgba(246, 166, 35, 0.25);
+}
+
+.dark .badge-noshow {
+  background: rgba(255, 92, 108, 0.15);
+  color: #FF5C6C;
+  border: 1px solid rgba(255, 92, 108, 0.3);
+}
+
+/* ── Seamless Dark Overrides for Tailwind Slate utilities ── */
+.dark .dark\:bg-slate-950,
+.dark .dark\:bg-slate-900 {
+  background-color: #0B1117 !important;
+}
+.dark .dark\:bg-slate-900\/50,
+.dark .dark\:bg-slate-900\/60,
+.dark .dark\:bg-slate-900\/70,
+.dark .dark\:bg-slate-900\/80,
+.dark .dark\:bg-slate-900\/90 {
+  background-color: rgba(11, 17, 23, 0.85) !important;
+}
+.dark .dark\:bg-slate-800 {
+  background-color: #111B25 !important;
+}
+.dark .dark\:bg-slate-800\/40,
+.dark .dark\:bg-slate-800\/50,
+.dark .dark\:bg-slate-800\/60 {
+  background-color: rgba(17, 27, 37, 0.6) !important;
+}
+.dark .dark\:bg-slate-800\/80,
+.dark .dark\:bg-slate-800\/90 {
+  background-color: rgba(17, 27, 37, 0.85) !important;
+}
+.dark .dark\:bg-slate-700 {
+  background-color: #152231 !important;
+}
+.dark .dark\:bg-slate-700\/40,
+.dark .dark\:bg-slate-700\/50 {
+  background-color: rgba(21, 34, 49, 0.5) !important;
+}
+.dark .dark\:border-slate-800,
+.dark .dark\:border-slate-700 {
+  border-color: rgba(160, 190, 210, 0.12) !important;
+}
+.dark .dark\:border-slate-600 {
+  border-color: rgba(160, 190, 210, 0.22) !important;
+}
+.dark .dark\:text-slate-100,
+.dark .dark\:text-slate-200 {
+  color: #F4F8FA !important;
+}
+.dark .dark\:text-slate-300 {
+  color: #A7B7C7 !important;
+}
+.dark .dark\:text-slate-400 {
+  color: #718295 !important;
+}
+.dark .dark\:text-slate-500 {
+  color: #4E5E70 !important;
+}
+.dark .dark\:hover\:bg-slate-800:hover {
+  background-color: #152231 !important;
+}
+.dark .dark\:hover\:bg-slate-700:hover {
+  background-color: #1E3146 !important;
+}
+.dark .dark\:hover\:bg-slate-700\/50:hover {
+  background-color: rgba(30, 49, 70, 0.5) !important;
+}
+
+/* ── Theme toggle icons ── */
 .theme-icon-sun,
 .theme-icon-moon {
   transition: opacity 200ms var(--ease-out), transform 300ms var(--ease-out);
@@ -380,7 +677,7 @@ button.no-press:active, [data-no-press]:active {
   -webkit-backdrop-filter: blur(4px);
 }
 
-/* ── Custom scrollbar (subtle) ── */
+/* ── Custom scrollbar ── */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -396,7 +693,7 @@ button.no-press:active, [data-no-press]:active {
   background-color: var(--scrollbar-hover);
 }
 
-/* ── Tooth SVG hover effect (gated) ── */
+/* ── Tooth SVG hover effect ── */
 @media (hover: hover) and (pointer: fine) {
   .tooth-cell:hover {
     filter: brightness(0.92);
@@ -407,202 +704,6 @@ button.no-press:active, [data-no-press]:active {
   transition: filter 150ms var(--ease-out);
 }
 
-/* Dark mode inverts the direction — brightness(0.92) reads as "nothing happened"
-
-p, span, td, th, label, li {
-  letter-spacing: 0;
-  line-height: 1.6;
-}
-
-small, .text-xs, .text-sm {
-  letter-spacing: 0.01em;
-}
-
-/* ── Button: press feedback — the #1 missing detail ── */
-button, [role="button"], a[href] {
-  /* NO blanket transition — each component owns its own */
-}
-
-@media (hover: hover) and (pointer: fine) {
-  button:hover, [role="button"]:hover {
-    /* Components define their own hovers */
-  }
-}
-
-button:active, [role="button"]:active {
-  transform: scale(0.97);
-  transition: transform 100ms var(--ease-out);
-}
-
-/* Exempt tiny inline elements from scale (badges, etc.) */
-button.no-press:active, [data-no-press]:active {
-  transform: none;
-}
-
-/* ── Stagger animation system ── */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.stagger-item {
-  opacity: 0;
-  animation: fadeInUp 400ms var(--ease-out) forwards;
-}
-
-.stagger-item:nth-child(1) { animation-delay: 0ms; }
-.stagger-item:nth-child(2) { animation-delay: 50ms; }
-.stagger-item:nth-child(3) { animation-delay: 100ms; }
-.stagger-item:nth-child(4) { animation-delay: 150ms; }
-.stagger-item:nth-child(5) { animation-delay: 200ms; }
-.stagger-item:nth-child(6) { animation-delay: 250ms; }
-.stagger-item:nth-child(7) { animation-delay: 300ms; }
-.stagger-item:nth-child(8) { animation-delay: 350ms; }
-.stagger-item:nth-child(n+9) { animation-delay: 400ms; }
-
-/* Faster stagger for table rows (30ms gap) */
-.stagger-row {
-  opacity: 0;
-  animation: fadeInUp 300ms var(--ease-out) forwards;
-}
-
-.stagger-row:nth-child(1) { animation-delay: 0ms; }
-.stagger-row:nth-child(2) { animation-delay: 30ms; }
-.stagger-row:nth-child(3) { animation-delay: 60ms; }
-.stagger-row:nth-child(4) { animation-delay: 90ms; }
-.stagger-row:nth-child(5) { animation-delay: 120ms; }
-.stagger-row:nth-child(6) { animation-delay: 150ms; }
-.stagger-row:nth-child(7) { animation-delay: 180ms; }
-.stagger-row:nth-child(8) { animation-delay: 210ms; }
-.stagger-row:nth-child(9) { animation-delay: 240ms; }
-.stagger-row:nth-child(10) { animation-delay: 270ms; }
-.stagger-row:nth-child(n+11) { animation-delay: 300ms; }
-
-/* ── Page section entrance ── */
-@keyframes sectionIn {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.section-enter {
-  animation: sectionIn 500ms var(--ease-out) forwards;
-}
-
-/* ── Pulse ring for "today" highlights ── */
-@keyframes pulseRing {
-  0%, 100% { box-shadow: 0 0 0 0 var(--brand-soft); }
-  50% { box-shadow: 0 0 0 6px transparent; }
-}
-
-.pulse-today {
-  animation: pulseRing 2s ease-in-out infinite;
-}
-
-/* ── Card & surface styling ── */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  box-shadow: 0 1px 3px var(--shadow-contact), 0 1px 2px var(--shadow-contact);
-  transition: box-shadow 200ms var(--ease-out);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .card:hover {
-    box-shadow: 0 4px 12px var(--shadow-ambient), 0 1px 3px var(--shadow-contact);
-  }
-}
-
-/* ── Glassmorphism (Apple-style translucent chrome) ── */
-.glass {
-  background: var(--glass-tint);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid var(--glass-edge);
-}
-
-/* ── Primary action button ──
-   Defined once so the white-on-teal pairing can't drift out of contrast when
-   the theme flips: the fill is a fixed gradient, so white always reads on it. */
-.btn-primary {
-  background: var(--grad-brand);
-  color: #ffffff;
-  font-weight: 600;
-  box-shadow: 0 1px 2px var(--shadow-contact);
-  transition: box-shadow 200ms var(--ease-out), opacity 200ms var(--ease-out);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .btn-primary:hover:not(:disabled) {
-    box-shadow: 0 4px 14px rgb(var(--brand-rgb) / 0.32);
-  }
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-}
-
-/* ── Theme toggle icons ──
-   Driven by the .dark class rather than React state, so the correct icon is
-   already right at first paint and there's no cross-fade on load. */
-.theme-icon-sun,
-.theme-icon-moon {
-  transition: opacity 200ms var(--ease-out), transform 300ms var(--ease-out);
-}
-
-.theme-icon-sun  { opacity: 1; transform: rotate(0deg); }
-.theme-icon-moon { opacity: 0; transform: rotate(60deg); }
-.dark .theme-icon-sun  { opacity: 0; transform: rotate(-60deg); }
-.dark .theme-icon-moon { opacity: 1; transform: rotate(0deg); }
-
-/* ── Modal scrim ── */
-.scrim {
-  background: var(--scrim);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
-/* ── Custom scrollbar (subtle) ── */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background-color: var(--scrollbar);
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background-color: var(--scrollbar-hover);
-}
-
-/* ── Tooth SVG hover effect (gated) ── */
-@media (hover: hover) and (pointer: fine) {
-  .tooth-cell:hover {
-    filter: brightness(0.92);
-    cursor: pointer;
-  }
-}
-.tooth-cell {
-  transition: filter 150ms var(--ease-out);
-}
-
-/* Dark mode inverts the direction — brightness(0.92) reads as "nothing happened"
-   on a dark surface. */
 .dark .tooth-cell:hover {
   filter: brightness(1.12);
 }

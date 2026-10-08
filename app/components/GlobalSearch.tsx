@@ -127,11 +127,11 @@ export default function GlobalSearch() {
   return (
     <div ref={containerRef} className="max-w-md w-full relative">
       <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
           {loading ? (
-            <Loader2 className="h-4 w-4 animate-spin text-brand" />
+            <Loader2 className="h-4 w-4 animate-spin text-teal-600" />
           ) : (
-            <Search className="h-4 w-4" style={{ color: "var(--ink-faint)" }} />
+            <Search className="h-4 w-4 text-slate-400" />
           )}
         </div>
         <input
@@ -144,13 +144,8 @@ export default function GlobalSearch() {
           }}
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder="Search patients, appointments…"
-          className="block w-full pl-9 pr-16 py-[7px] rounded-xl text-[13px] outline-none transition-all duration-150 focus:border-brand focus:ring-3 focus:ring-brand/10"
-          style={{
-            background: "var(--surface)",
-            border: "1px solid var(--line)",
-            color: "var(--ink)",
-          }}
+          placeholder="Search patients, appointments, treatments…"
+          className="block w-full pl-10 pr-16 py-2 rounded-full text-[13px] bg-white dark:bg-[#152231] border border-slate-200 dark:border-[rgba(160,190,210,0.12)] text-slate-900 dark:text-[#F4F8FA] placeholder:text-slate-400 dark:placeholder:text-[#718295] shadow-xs outline-none transition-all duration-150 focus:border-teal-600 dark:focus:border-[#00B8A9] focus:ring-2 focus:ring-teal-500/10 dark:focus:ring-[#00B8A9]/20"
         />
         {query && (
           <button
@@ -158,12 +153,12 @@ export default function GlobalSearch() {
               setQuery("");
               inputRef.current?.focus();
             }}
-            className="absolute inset-y-0 right-14 pr-2 flex items-center text-ink-faint hover:text-ink-muted"
+            className="absolute inset-y-0 right-14 pr-2 flex items-center text-slate-400 dark:text-[#718295] hover:text-slate-600 dark:hover:text-[#F4F8FA]"
           >
             <X className="w-3.5 h-3.5" />
           </button>
         )}
-        <kbd className="absolute inset-y-0 right-2.5 my-auto h-5 px-1.5 flex items-center text-[10px] font-medium text-ink-faint bg-raised rounded border border-line pointer-events-none">
+        <kbd className="absolute inset-y-0 right-3 my-auto h-5 px-1.5 flex items-center text-[10px] font-medium text-slate-400 dark:text-[#718295] bg-slate-100 dark:bg-[#19283A] rounded border border-slate-200 dark:border-[rgba(160,190,210,0.12)] pointer-events-none">
           {isMac ? "⌘K" : "Ctrl K"}
         </kbd>
       </div>
@@ -171,9 +166,9 @@ export default function GlobalSearch() {
       {/* Results Dropdown Popover */}
       {isOpen && query.length >= 2 && (
         <div
-          className="absolute left-0 right-0 top-full mt-2 rounded-2xl shadow-xl z-50 overflow-hidden border border-line max-h-[420px] overflow-y-auto"
+          className="absolute left-0 right-0 top-full mt-2 rounded-2xl shadow-2xl z-50 overflow-hidden border border-line max-h-[420px] overflow-y-auto"
           style={{
-            background: "var(--surface)",
+            background: "var(--surface-elevated)",
             backdropFilter: "blur(20px)",
           }}
         >

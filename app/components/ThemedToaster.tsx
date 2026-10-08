@@ -3,6 +3,14 @@
 import { useEffect, useState } from "react";
 import { Toaster } from "sonner";
 
+if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+  const orig = console.error;
+  console.error = (...args: unknown[]) => {
+    if (typeof args[0] === "string" && args[0].includes("Encountered a script tag")) return;
+    orig.apply(console, args);
+  };
+}
+
 /**
  * Sonner's own `theme="system"` reads prefers-color-scheme, which ignores our
  * class toggle. Watching the class instead keeps toasts in step however the

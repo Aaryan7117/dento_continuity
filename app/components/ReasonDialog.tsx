@@ -28,8 +28,7 @@ export default function ReasonDialog({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-      style={{ background: "rgba(0, 0, 0, 0.45)" }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 scrim"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget && !pending) onClose();
       }}
@@ -42,8 +41,12 @@ export default function ReasonDialog({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="w-full max-w-sm rounded-2xl p-6 space-y-4 text-left border border-line-strong"
-        style={{ backgroundColor: "var(--surface)" }}
+        className="w-full max-w-sm rounded-2xl p-6 space-y-4 text-left border shadow-2xl"
+        style={{
+          backgroundColor: "var(--surface-elevated)",
+          borderColor: "var(--line)",
+          boxShadow: "0 24px 60px rgba(0, 0, 0, 0.65)",
+        }}
       >
         <div>
           <h3 className="text-base font-bold text-ink">{title}</h3>
